@@ -1,0 +1,11 @@
+[package]
+authors = ["Simon Cambier <simon.cambier@protonmail.com>"]
+edition = "2018"
+name = "tic80-fnl-watcher"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+notify = "4.0.17"
+regex = "1.5.4"
