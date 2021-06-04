@@ -7,5 +7,13 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4"
+clap = "2.33.3"
 notify = "4.0.17"
 regex = "1.5.4"
+
+[profile.release]
+# lto = true
+# codegen-units = 1
+# opt-level = "z"
+# panic = 'abort'

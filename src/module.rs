@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, io::Error, path::PathBuf};
 
 #[derive(Clone)]
 pub struct Module {
@@ -7,14 +7,17 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(base: &PathBuf, name: String) -> Module {
+    pub fn new(base: &PathBuf, name: &String) -> Result<Module, Error> {
         let full_path = Module::get_module_path(&base, &name);
         Module::from_path(full_path)
     }
 
-    pub fn from_path(path: PathBuf) -> Module {
-        let contents = fs::read_to_string(&path).unwrap();
-        Module { contents, path }
+    pub fn from_path(path: PathBuf) -> Result<Module, Error> {
+        let contents = fs::read_to_string(&path);
+        match contents {
+            Ok(contents) => Ok(Module { contents, path }),
+            Err(e) => Err(e),
+        }
     }
 
     /// Transforms a module name to a full path,
