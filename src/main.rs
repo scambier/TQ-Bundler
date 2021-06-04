@@ -100,7 +100,7 @@ fn compile(config: &Config) -> bool {
         }
     }
 
-    // Loop until the entry point no longer has requires
+    // Loop until the main file no longer has requires
     let mut copy = modules.to_vec();
     let entry_point = copy.first_mut().unwrap();
     loop {
@@ -113,9 +113,13 @@ fn compile(config: &Config) -> bool {
                 let mod_name = cap.get(1).unwrap().as_str().to_string();
                 let path = Module::get_module_path(&entry_point.path, &mod_name);
                 let module = modules.iter().find(|m| m.path == path).unwrap();
+
+                // Inject code into the main file
+                let module_contents =
+                    &format!(";; {:}\n\n{:}\n;; /{:}\n", &mod_name, &module.contents, &mod_name);
                 entry_point
                     .contents
-                    .replace_range(pos.range(), &module.contents);
+                    .replace_range(pos.range(), module_contents);
             }
             _ => {
                 break;
