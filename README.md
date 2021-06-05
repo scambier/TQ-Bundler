@@ -40,7 +40,14 @@ new fennel
 save mygame/game.tic
 ```
 
-Alongside `game.tic`, create a new file `main.fnl` that will hold your code
+Alongside `game.tic`, create a new file `main.fnl` that will hold your code. This file must have the mandatory comments to tell TIC-80 how to start your game.
+
+`main.fnl`:
+```lisp
+;; author: game developer
+;; desc:   short description
+;; script: fennel
+```
 
 ### Require files
 
@@ -48,14 +55,13 @@ All included files are relative to the file including them. All includes are rec
 
 If a file has already been `include`d, subsequent `include`s will be discarded.
 
-Fennel 
+`somefile.fnl`:
 ```lisp
 (include macros) ;; will look for macros.fnl
 (include tools.utils) ;; will look for tools/utils.fnl
 ```
 
 ### Bundle and launch your game
-
 
 To make a simple build:
 ```sh
