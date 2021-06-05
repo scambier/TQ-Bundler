@@ -379,17 +379,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tic80-fnl-watcher"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "ctrlc",
- "notify",
- "regex",
-]
-
-[[package]]
 name = "time"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -398,6 +387,17 @@ dependencies = [
  "libc",
  "wasi",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "tq-bundler"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "ctrlc",
+ "notify",
+ "regex",
 ]
 
 [[package]]

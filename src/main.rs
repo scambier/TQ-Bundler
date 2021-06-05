@@ -2,7 +2,7 @@ mod config;
 mod module;
 
 use chrono::Local;
-use clap::{App, Arg};
+use clap::{App, Arg, SubCommand};
 use config::*;
 use module::*;
 use notify::{DebouncedEvent::*, RecommendedWatcher, RecursiveMode, Watcher};
@@ -12,6 +12,7 @@ use std::{
     path::PathBuf,
     process::{exit, Child, Command},
     sync::{mpsc::channel, Mutex},
+    thread,
     time::Duration,
 };
 
@@ -49,24 +50,33 @@ fn watch(config: &Config) -> notify::Result<()> {
 }
 
 fn compile(config: &Config) -> bool {
-    let re_require = Regex::new(r"\(include :(.+)\)").unwrap();
+    // Fennel regex
+    let re_include = Regex::new(r"\(include ([a-zA-Z\.]+)\)").unwrap();
 
     // Check the entry point
-    let entry = Module::new(&config.base_folder, &config.entry_point);
-    assert!(entry.is_ok(), "Could not find file {}", &config.entry_point);
-    let entry = entry.unwrap();
+    let main_file = Module::new(&config.base_folder, &config.entry_point);
+    assert!(
+        main_file.is_ok(),
+        "Could not find file {}",
+        &config.entry_point
+    );
+    let main_file = main_file.unwrap();
 
-    let mut modules: Vec<Module> = vec![entry];
+    // List of files to include, starting with the entry file
+    let mut modules: Vec<Module> = vec![main_file];
+    // Modules to add once the loop is over
+    let mut to_add: Vec<Module> = vec![];
+    // List of included file paths
     let mut requires: Vec<PathBuf> = vec![];
 
-    // Reference all the modules
-    let mut to_add: Vec<Module> = vec![];
+    // Index all the modules
     loop {
         modules.append(&mut to_add);
+
         for module in modules.to_vec().iter_mut() {
-            for (cap, pos) in re_require
+            for (cap, pos) in re_include
                 .captures_iter(&module.contents.clone())
-                .zip(re_require.find_iter(&module.contents.clone()))
+                .zip(re_include.find_iter(&module.contents.clone()))
             {
                 let name = cap.get(1).unwrap().as_str().to_string();
                 let path = Module::get_module_path(&module.path, &name);
@@ -92,63 +102,72 @@ fn compile(config: &Config) -> bool {
                 // println!("{:?}", &cap);
             }
         }
+        // Stop the indexing once we no longer have any module to add,
         if to_add.len() == 0 {
             break;
         }
     }
 
-    // Loop until the main file no longer has requires
-    let mut copy = modules.to_vec();
-    let entry_point = copy.first_mut().unwrap();
+    // Make a copy of the modules vec
+    // to get a mutable copy of the entry file
+    let mut modules_copy = modules.to_vec();
+    let main_file = modules_copy.first_mut().unwrap();
+
+    // Loop until all includes in the main file
+    // are recursively replaced
     loop {
-        let cloned_contents = entry_point.contents.clone();
+        let cloned_contents = main_file.contents.clone();
         match (
-            re_require.captures(&cloned_contents),
-            re_require.find(&cloned_contents),
+            re_include.captures(&cloned_contents),
+            re_include.find(&cloned_contents),
         ) {
             (Some(cap), Some(pos)) => {
-                let mod_name = cap.get(1).unwrap().as_str().to_string();
-                let path = Module::get_module_path(&entry_point.path, &mod_name);
+                let module_name = cap.get(1).unwrap().as_str().to_string();
+                let path = Module::get_module_path(&main_file.path, &module_name);
                 let module = modules.iter().find(|m| m.path == path).unwrap();
 
                 // Inject code into the main file
                 let module_contents = &format!(
-                    ";; {:}\n\n{:}\n;; /{:}\n",
-                    &mod_name, &module.contents, &mod_name
+                    ";; [included {:}]\n\n{:}\n;; [/included {:}]\n",
+                    &module_name, &module.contents, &module_name
                 );
-                entry_point
+                // Inject the code
+                main_file
                     .contents
                     .replace_range(pos.range(), module_contents);
             }
             _ => {
+                // If we haven't captured any regex,
+                // that means that all includes are resolved
                 break;
             }
         }
 
-        if !re_require.is_match(&entry_point.contents) {
-            // Break once we recursively replaced all requires in the entry point
-            break;
-        }
+        // if !re_include.is_match(&main_file.contents) {
+        //     // Break once we recursively replaced all requires in the entry point
+        //     break;
+        // }
     }
 
-    let names = modules
-        .iter()
-        .map(|m| m.path.file_name().unwrap().to_str().unwrap())
-        .collect::<Vec<_>>()
-        .join(", ");
-    log(format!(
-        "Compiled {:} files into {:}: {:}",
-        modules.len(),
-        &config.output_file,
-        names
-    ));
-
+    // Log the (succesful or not) result
     let success = fs::write(
         config.base_folder.join(&config.output_file),
-        &entry_point.contents,
+        &main_file.contents,
     );
     match success {
-        Ok(_) => {}
+        Ok(_) => {
+            let names = modules
+                .iter()
+                .map(|m| m.path.file_name().unwrap().to_str().unwrap())
+                .collect::<Vec<_>>()
+                .join(", ");
+            log(format!(
+                "Compiled {:} files into {:}: {:}",
+                modules.len(),
+                &config.output_file,
+                names
+            ));
+        }
         Err(e) => {
             println!("Could not write output file:");
             println!("{:?}", e);
@@ -161,13 +180,25 @@ fn main() {
     let matches = App::new("TIC-80 Bundler")
         .version("1.0.0")
         .arg(
-            Arg::with_name("FILE")
-                .help("The entry point of your TIC-80 game")
+            Arg::with_name("GAME")
+                .value_name("game.tic path")
+                .help("The TIC game file in which the bundled code will be injected")
                 .required(true)
                 .index(1),
         )
         .arg(
+            Arg::with_name("CODE")
+                .value_name("main.fnl")
+                .short("c")
+                .long("code")
+                .help("The \"main\" code file that will be injected inside the game")
+                .takes_value(true)
+                .default_value("main.fnl")
+                .required(false),
+        )
+        .arg(
             Arg::with_name("OUTPUT")
+                .value_name("build.fnl")
                 .short("o")
                 .long("output")
                 .help("The entry point of your TIC-80 game")
@@ -177,6 +208,7 @@ fn main() {
         )
         .arg(
             Arg::with_name("TIC")
+                .value_name("path")
                 .long("--tic")
                 .help("Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your game loaded.")
                 .takes_value(true)
@@ -188,14 +220,21 @@ fn main() {
                 .long("watch")
                 .help("Watch for changes and rebuild automatically"),
         )
+        .subcommand(
+            SubCommand::with_name("init").about("Initialize a TIC-80 project")
+            .arg(Arg::with_name("LANG").help("\"fnl\" or \"lua\""))
+        )
         .get_matches();
 
+    // Create a config file from the CLI arguments
     let config = Config::new(&matches);
 
-    // First compilation
+    // Initial compilation, if we don't want to watch the files
     let compiled = compile(&config);
 
-    // If compilation failed and we need to launch TIC, abort
+    // If compilation failed AND we need to launch TIC, abort.
+    // If subsequent compilations fail while TIC is already running,
+    // we'll just log an error message and continue watching.
     if !compiled && config.tic_path.is_some() {
         println!("Compilation failed - Could not launch TIC-80");
         return;
@@ -204,33 +243,31 @@ fn main() {
     // Start TIC-80
     let tic_path = config.tic_path.clone();
     let tic_process_mtx: Mutex<Option<Child>> = Mutex::new(None);
-    match tic_path {
-        Some(tic) => {
-            let output_path = config
-                .base_folder
-                .join(&config.output_file)
-                .to_str()
-                .unwrap()
-                .to_string();
-            tic_process_mtx.lock().unwrap().replace(
-                Command::new(tic)
-                    .args(&["-code-watch", &output_path])
-                    .spawn()
-                    .expect("Failed to launch TIC-80"),
-            );
-        }
-        None => {}
-    }
+    if let Some(tic_path) = tic_path {
+        let output_path = config
+            .base_folder
+            .join(&config.output_file)
+            .to_str()
+            .unwrap()
+            .to_string();
 
-    ctrlc::set_handler(move || {
-        let child = tic_process_mtx.lock().unwrap().take();
-        // Kill TUC-80 if it is launched
-        if let Some(mut child) = child {
-            let _ = child.kill();
-        }
-        exit(0);
-    })
-    .expect("Error setting Ctrl-C handler");
+        let child = Command::new(tic_path)
+            .args(&[&config.game, "-code-watch", &output_path])
+            .spawn()
+            .expect("Failed to launch TIC-80");
+        tic_process_mtx.lock().unwrap().replace(child);
+
+        // Handle CTRL+C interruptions to exit gracefully
+        ctrlc::set_handler(move || {
+            let child = tic_process_mtx.lock().unwrap().take();
+            // Kill TIC-80 if it is launched
+            if let Some(mut child) = child {
+                let _ = child.kill();
+            }
+            exit(0);
+        })
+        .expect("Error setting Ctrl-C handler");
+    }
 
     // Start the watcher
     if config.watch {

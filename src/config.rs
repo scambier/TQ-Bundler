@@ -3,9 +3,10 @@ use std::path::{Path, PathBuf};
 use clap::ArgMatches;
 
 pub struct Config {
+    pub base_folder: PathBuf,
+    pub game: String,
     pub entry_point: String,
     pub tic_path: Option<String>,
-    pub base_folder: PathBuf,
     pub output_file: String,
     pub watch: bool,
 }
@@ -13,7 +14,7 @@ pub struct Config {
 impl Config {
     /// Creates a new Config instance from clap matches
     pub fn new(matches: &ArgMatches) -> Config {
-        let str_path = matches.value_of("FILE").unwrap();
+        let str_path = matches.value_of("CODE").unwrap();
         let file_path = Path::new(str_path);
         if !file_path.is_file() {
             panic!("{:?} is not a valid file", &file_path);
@@ -27,6 +28,7 @@ impl Config {
         };
 
         Config {
+            game: String::from(matches.value_of("GAME").unwrap()),
             entry_point: String::from(file),
             tic_path,
             base_folder: base_folder.to_path_buf(),
