@@ -5,9 +5,15 @@ use chrono::Local;
 use clap::{App, Arg};
 use config::*;
 use module::*;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{DebouncedEvent::*, RecommendedWatcher, RecursiveMode, Watcher};
 use regex::Regex;
-use std::{fs, path::PathBuf, sync::mpsc::channel, time::Duration};
+use std::{
+    fs,
+    path::PathBuf,
+    process::{exit, Child, Command},
+    sync::{mpsc::channel, Mutex},
+    time::Duration,
+};
 
 fn log(str: String) {
     println!("{:} - {:}", Local::now().format("%M:%m:%S"), str);
@@ -25,21 +31,13 @@ fn watch(config: &Config) -> notify::Result<()> {
     loop {
         match receiver.recv() {
             Ok(event) => {
-                // println!("{:?}", event);
                 match event {
-                    notify::DebouncedEvent::NoticeWrite(path) => {
+                    // Trigger rebuild on file write|delete
+                    NoticeWrite(path) | NoticeRemove(path) => {
                         if !path.ends_with(&config.output_file) {
                             compile(&config);
                         }
                     }
-                    // notify::DebouncedEvent::NoticeRemove(_) => todo!(),
-                    // notify::DebouncedEvent::Create(_) => todo!(),
-                    // notify::DebouncedEvent::Write(path) => {}
-                    // notify::DebouncedEvent::Chmod(_) => todo!(),
-                    // notify::DebouncedEvent::Remove(_) => todo!(),
-                    // notify::DebouncedEvent::Rename(_, _) => todo!(),
-                    // notify::DebouncedEvent::Rescan => todo!(),
-                    // notify::DebouncedEvent::Error(_, _) => todo!(),
                     _ => {}
                 }
             }
@@ -53,8 +51,7 @@ fn watch(config: &Config) -> notify::Result<()> {
 fn compile(config: &Config) -> bool {
     let re_require = Regex::new(r"\(include :(.+)\)").unwrap();
 
-    // The entry point MUST be named "main.fnl"
-    // TODO: allow any entry point (CLI param)
+    // Check the entry point
     let entry = Module::new(&config.base_folder, &config.entry_point);
     assert!(entry.is_ok(), "Could not find file {}", &config.entry_point);
     let entry = entry.unwrap();
@@ -80,7 +77,7 @@ fn compile(config: &Config) -> bool {
                             to_add.push(module);
                         }
                         Err(_) => {
-                            log(format!("Could not find module {:?}", &path));
+                            log(format!(":( Could not find module {:?}", &path));
                             return false;
                         }
                     }
@@ -115,8 +112,10 @@ fn compile(config: &Config) -> bool {
                 let module = modules.iter().find(|m| m.path == path).unwrap();
 
                 // Inject code into the main file
-                let module_contents =
-                    &format!(";; {:}\n\n{:}\n;; /{:}\n", &mod_name, &module.contents, &mod_name);
+                let module_contents = &format!(
+                    ";; {:}\n\n{:}\n;; /{:}\n",
+                    &mod_name, &module.contents, &mod_name
+                );
                 entry_point
                     .contents
                     .replace_range(pos.range(), module_contents);
@@ -172,7 +171,15 @@ fn main() {
                 .short("o")
                 .long("output")
                 .help("The entry point of your TIC-80 game")
+                .takes_value(true)
                 .default_value("build.fnl")
+                .required(false),
+        )
+        .arg(
+            Arg::with_name("TIC")
+                .long("--tic")
+                .help("Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your game loaded.")
+                .takes_value(true)
                 .required(false),
         )
         .arg(
@@ -186,7 +193,44 @@ fn main() {
     let config = Config::new(&matches);
 
     // First compilation
-    compile(&config);
+    let compiled = compile(&config);
+
+    // If compilation failed and we need to launch TIC, abort
+    if !compiled && config.tic_path.is_some() {
+        println!("Compilation failed - Could not launch TIC-80");
+        return;
+    }
+
+    // Start TIC-80
+    let tic_path = config.tic_path.clone();
+    let tic_process_mtx: Mutex<Option<Child>> = Mutex::new(None);
+    match tic_path {
+        Some(tic) => {
+            let output_path = config
+                .base_folder
+                .join(&config.output_file)
+                .to_str()
+                .unwrap()
+                .to_string();
+            tic_process_mtx.lock().unwrap().replace(
+                Command::new(tic)
+                    .args(&["-code-watch", &output_path])
+                    .spawn()
+                    .expect("Failed to launch TIC-80"),
+            );
+        }
+        None => {}
+    }
+
+    ctrlc::set_handler(move || {
+        let child = tic_process_mtx.lock().unwrap().take();
+        // Kill TUC-80 if it is launched
+        if let Some(mut child) = child {
+            let _ = child.kill();
+        }
+        exit(0);
+    })
+    .expect("Error setting Ctrl-C handler");
 
     // Start the watcher
     if config.watch {
