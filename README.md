@@ -29,34 +29,28 @@ If you have the rustup toolchain, you can also `cargo install --git https://gith
 
 ### Create a new project
 
-Terminal:
 ```sh
+# In your terminal
 $ mkdir mygame
 ```
 
-TIC-80:
 ```sh
+# Inside TIC-80:
 new fennel
-save mygame/game.tic
+save mygame/game.fnl
 ```
 
-Alongside `game.tic`, create a new file `main.fnl` that will hold your code. This file must have the mandatory comments to tell TIC-80 how to start your game.
+- Alongside `game.fnl`, create a new file `main.fnl` that will hold your code.
+- Cut the code (comments included) from `game.fnl` and paste it inside `main.fnl`
 
-`main.fnl`:
-```lisp
-;; author: game developer
-;; desc:   short description
-;; script: fennel
-```
-
-### Require files
+### Include files
 
 All included files are relative to the file including them. All includes are recursively resolved, with respect to their declaration order.
 
-If a file has already been `include`d, subsequent `include`s will be discarded.
+If a file has already been included, subsequent includes will be discarded.
 
-`somefile.fnl`:
 ```lisp
+;; Fennel syntax
 (include macros) ;; will look for macros.fnl
 (include tools.utils) ;; will look for tools/utils.fnl
 ```
@@ -74,3 +68,5 @@ $ tq-bundler.exe game.fnl --code main.fnl --watch --tic path/to/tic80.exe
 ```
 
 You can execute `tq-bundler.exe` without any option, it will look for the files `game.tic` and `main.fnl`.
+
+**/!\\** The default bundled file is named `build.fnl`. TQ-Builder won't check if a file with this name already exists, and will happily overwrite it with each new compilation **/!\\**
