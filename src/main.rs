@@ -179,46 +179,45 @@ fn compile(config: &Config) -> bool {
 fn main() {
     let matches = App::new("TIC-80 Bundler")
         .version("1.0.0")
-        .arg(
-            Arg::with_name("GAME")
-                .value_name("game.tic path")
-                .help("The TIC game file in which the bundled code will be injected")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("CODE")
-                .value_name("main.fnl")
-                .short("c")
-                .long("code")
-                .help("The \"main\" code file that will be injected inside the game")
-                .takes_value(true)
-                .default_value("main.fnl")
-                .required(false),
-        )
-        .arg(
-            Arg::with_name("OUTPUT")
-                .value_name("build.fnl")
-                .short("o")
-                .long("output")
-                .help("The entry point of your TIC-80 game")
-                .takes_value(true)
-                .default_value("build.fnl")
-                .required(false),
-        )
-        .arg(
-            Arg::with_name("TIC")
-                .value_name("path")
-                .long("--tic")
-                .help("Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your game loaded.")
-                .takes_value(true)
-                .required(false),
-        )
-        .arg(
-            Arg::with_name("WATCH")
-                .short("w")
-                .long("watch")
-                .help("Watch for changes and rebuild automatically"),
+        .subcommand(
+            SubCommand::with_name("run")
+            .about("Bundle and launch your game")
+            .arg(
+                Arg::with_name("GAME")
+                    .help("The TIC game file in which the bundled code will be injected")
+                    .required(true)
+                    .index(1),
+            )
+            .arg(
+                Arg::with_name("CODE")
+                    .required(true)
+                    .index(2)
+                    .help("The \"main\" code file that will be injected inside the game")
+            )
+            .arg(
+                Arg::with_name("OUTPUT")
+                    .value_name("build.fnl")
+                    .short("o")
+                    .long("output")
+                    .help("The entry point of your TIC-80 game")
+                    .takes_value(true)
+                    .default_value("build.fnl")
+                    .required(false),
+            )
+            .arg(
+                Arg::with_name("TIC")
+                    .value_name("path")
+                    .long("--tic")
+                    .help("Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your game loaded.")
+                    .takes_value(true)
+                    .required(false),
+            )
+            .arg(
+                Arg::with_name("WATCH")
+                    .short("w")
+                    .long("watch")
+                    .help("Watch for changes and rebuild automatically"),
+            )
         )
         .subcommand(
             SubCommand::with_name("init").about("Initialize a TIC-80 project")

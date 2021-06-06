@@ -14,6 +14,7 @@
 - [ ] Wren support
 - [ ] Squirrel support
 - ~~[ ] JavaScript support~~ [Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
+
 ## Installation
 
 ### Binary
@@ -45,28 +46,45 @@ save mygame/game.fnl
 
 ### Include files
 
-All included files are relative to the file including them. All includes are recursively resolved, with respect to their declaration order.
-
-If a file has already been included, subsequent includes will be discarded.
-
 ```lisp
 ;; Fennel syntax
 (include macros) ;; will look for macros.fnl
 (include tools.utils) ;; will look for tools/utils.fnl
 ```
 
+All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order.
+
+If a file has already been included, subsequent includes will be discarded.
+
 ### Bundle and launch your game
 
-To make a simple build:
-```sh
-$ tq-bundler.exe game.fnl --code main.fnl
+Tl;dr:
 ```
+$ tq-bundler.exe run game.tic main.fnl --watch
+````
 
-Watch changes to automatically rebuild, and launch TIC-80
-```sh
-$ tq-bundler.exe game.fnl --code main.fnl --watch --tic path/to/tic80.exe
+Full version:
 ```
+$ tq-bundler.exe help run
 
-You can execute `tq-bundler.exe` without any option, it will look for the files `game.tic` and `main.fnl`.
+Bundle and launch your game
+
+USAGE:
+    tq-bundler.exe run [FLAGS] [OPTIONS] <game.tic>
+
+FLAGS:
+    -w, --watch      Watch for changes and rebuild automatically
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -c, --code <main.fnl>       The "main" code file that will be injected inside the game [default: main.fnl]
+    -o, --output <build.fnl>    The entry point of your TIC-80 game [default: build.fnl]
+        --tic <path>            Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your
+                                game loaded.
+
+ARGS:
+    <game.tic>    The TIC game file in which the bundled code will be injected
+```
 
 **/!\\** The default bundled file is named `build.fnl`. TQ-Builder won't check if a file with this name already exists, and will happily overwrite it with each new compilation **/!\\**
