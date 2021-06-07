@@ -8,12 +8,12 @@
 - [x] Watch changes and auto rebuild
 - [x] Launch TIC-80 in watch mode
 - [x] Fennel support
-- [ ] `init` command
 - [ ] Lua support
 - [ ] Moonscript support
-- [ ] Wren support
+- [x] Wren support
 - [ ] Squirrel support
-- ~~[ ] JavaScript support~~ [Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
+- [ ] `init` command
+- [x] ~~JavaScript support~~ [Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
 
 ## Installation
 
@@ -46,10 +46,22 @@ save mygame/game.fnl
 
 ### Include files
 
+! The regex parser will only resolve `include`s that:  
+a) are on their own line and  
+b) are terminated with a line return
+
+That last point is important if the last line of a file is an `include`
+
 ```lisp
 ;; Fennel syntax
 (include macros) ;; will look for macros.fnl
 (include tools.utils) ;; will look for tools/utils.fnl
+```
+
+```wren
+// Wren syntax
+include "macros"
+include "tools.utils"
 ```
 
 All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order.
@@ -61,7 +73,7 @@ If a file has already been included, subsequent includes will be discarded.
 Tl;dr:
 ```
 $ tq-bundler.exe run game.tic main.fnl --watch
-````
+```
 
 Full version:
 ```

@@ -6,7 +6,6 @@ use clap::{App, Arg, ArgMatches, SubCommand};
 use config::*;
 use module::*;
 use notify::{DebouncedEvent::*, RecommendedWatcher, RecursiveMode, Watcher};
-use regex::Regex;
 use std::{
     fs,
     path::PathBuf,
@@ -35,12 +34,10 @@ fn main() {
             )
             .arg(
                 Arg::with_name("OUTPUT")
-                    .value_name("build.fnl")
                     .short("o")
                     .long("output")
                     .help("The entry point of your TIC-80 game")
                     .takes_value(true)
-                    .default_value("build.fnl")
                     .required(false),
             )
             .arg(
@@ -60,7 +57,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("init").about("Initialize a TIC-80 project")
-            .arg(Arg::with_name("LANG").help("\"fnl\" or \"lua\""))
+            .arg(Arg::with_name("LANG").help(r#""fnl", "wren""#))
         )
         .get_matches();
 
@@ -77,19 +74,22 @@ fn log(str: String) {
 fn watch(config: &Config) -> notify::Result<()> {
     let (sender, receiver) = channel();
 
-    let mut watcher: RecommendedWatcher = Watcher::new(sender, Duration::from_millis(500)).unwrap();
+    let mut watcher: RecommendedWatcher = Watcher::new(sender, Duration::from_millis(50)).unwrap();
 
     watcher
         .watch(&config.base_folder, RecursiveMode::Recursive)
-        .unwrap();
+        .unwrap(); // Panic if the watcher can't watch
 
     loop {
         match receiver.recv() {
             Ok(event) => {
                 match event {
                     // Trigger rebuild on file write|delete
-                    NoticeWrite(path) | NoticeRemove(path) => {
-                        if !path.ends_with(&config.output_file) {
+                    Create(path) | Write(path) | Remove(path) => {
+                        if path.is_file()
+                            && path.ends_with(&config.filetype.extension)
+                            && !path.ends_with(&config.output_file)
+                        {
                             compile(&config);
                         }
                     }
@@ -104,11 +104,14 @@ fn watch(config: &Config) -> notify::Result<()> {
 }
 
 fn compile(config: &Config) -> bool {
-    // Fennel regex
-    let re_include = Regex::new(r"\(include ([a-zA-Z\.]+)\)").unwrap();
+    let re_include = &config.filetype.regex;
 
     // Check the entry point
-    let main_file = Module::new(&config.base_folder, &config.entry_point);
+    let main_file = Module::new(
+        &config.base_folder,
+        &config.entry_point,
+        &config.filetype.extension,
+    );
     assert!(
         main_file.is_ok(),
         "Could not find file {}",
@@ -133,7 +136,7 @@ fn compile(config: &Config) -> bool {
                 .zip(re_include.find_iter(&module.contents.clone()))
             {
                 let name = cap.get(1).unwrap().as_str().to_string();
-                let path = Module::get_module_path(&module.path, &name);
+                let path = Module::get_module_path(&module.path, &name, &config.filetype.extension);
                 if !Module::has_module(&modules, &path) {
                     // Module does not already exist, load it
                     match Module::from_path(path.clone()) {
@@ -177,13 +180,21 @@ fn compile(config: &Config) -> bool {
         ) {
             (Some(cap), Some(pos)) => {
                 let module_name = cap.get(1).unwrap().as_str().to_string();
-                let path = Module::get_module_path(&main_file.path, &module_name);
+                let path = Module::get_module_path(
+                    &main_file.path,
+                    &module_name,
+                    &config.filetype.extension,
+                );
                 let module = modules.iter().find(|m| m.path == path).unwrap();
 
                 // Inject code into the main file
                 let module_contents = &format!(
-                    ";; [included {:}]\n\n{:}\n;; [/included {:}]\n",
-                    &module_name, &module.contents, &module_name
+                    "{:} [included {:}]\n\n{:}\n{:} [/included {:}]\n",
+                    &config.filetype.comment,
+                    &module_name,
+                    &module.contents,
+                    &config.filetype.comment,
+                    &module_name
                 );
                 // Inject the code
                 main_file
@@ -196,11 +207,6 @@ fn compile(config: &Config) -> bool {
                 break;
             }
         }
-
-        // if !re_include.is_match(&main_file.contents) {
-        //     // Break once we recursively replaced all requires in the entry point
-        //     break;
-        // }
     }
 
     // Log the (succesful or not) result
@@ -262,15 +268,15 @@ fn run(matches: &ArgMatches) {
         tic_process_mtx.lock().unwrap().replace(child);
 
         // Handle CTRL+C interruptions to exit gracefully
-        ctrlc::set_handler(move || {
+        let _handler = ctrlc::set_handler(move || {
             let child = tic_process_mtx.lock().unwrap().take();
             // Kill TIC-80 if it is launched
             if let Some(mut child) = child {
                 let _ = child.kill();
             }
             exit(0);
-        })
-        .expect("Error setting Ctrl-C handler");
+        });
+        // .expect("Error setting Ctrl-C handler");
     }
 
     // Start the watcher

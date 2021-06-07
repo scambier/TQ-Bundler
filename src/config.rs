@@ -1,8 +1,37 @@
 use std::path::{Path, PathBuf};
 
 use clap::ArgMatches;
+use regex::Regex;
+
+pub struct FileType {
+    pub extension: String,
+    pub regex: Regex,
+    pub comment: String,
+}
+
+impl FileType {
+    pub fn new(filename: &Path) -> FileType {
+        match filename.extension().unwrap().to_str().unwrap() {
+            "fnl" => FileType {
+                extension: "fnl".to_string(),
+                // (\n|[\r\n]+) is a fix for the EOL symbol ($) not working on Windows CRLF
+                regex: Regex::new(r#"(?m)^\(include ([a-zA-Z\.]+)\)(\n|[\r\n]+)"#).unwrap(),
+                comment: ";;".to_string()
+            },
+            "wren" => FileType {
+                extension: "wren".to_string(),
+                regex: Regex::new(r#"(?m)^include "([a-zA-Z\.]+)"(\n|[\r\n]+)"#).unwrap(),
+                comment: "//".to_string()
+            },
+            _ => {
+                panic!("Supported extensions are .fnl, .wren")
+            }
+        }
+    }
+}
 
 pub struct Config {
+    pub filetype: FileType,
     pub base_folder: PathBuf,
     pub game: String,
     pub entry_point: String,
@@ -14,28 +43,36 @@ pub struct Config {
 impl Config {
     /// Creates a new Config instance from clap matches
     pub fn new(matches: &ArgMatches) -> Config {
-        let str_path = matches.value_of("CODE").unwrap();
-        let file_path = Path::new(str_path);
-        if !file_path.is_file() {
-            panic!("{:?} is not a valid file", &file_path);
+        // Code entry point
+        let code_str_path = matches.value_of("CODE").unwrap();
+        let code_file_path = Path::new(code_str_path);
+        if !code_file_path.is_file() {
+            panic!("{:?} is not a valid file", &code_file_path);
         }
-        let file = file_path.file_stem().unwrap().to_str().unwrap();
-        let base_folder = file_path.parent().unwrap();
+        let file = code_file_path.file_stem().unwrap().to_str().unwrap();
 
+        // Reference path for includes
+        let base_folder = code_file_path.parent().unwrap().to_path_buf();
+
+        // Optional path to TIC-80; will launch it if present
         let tic_path = match matches.value_of("TIC") {
             Some(v) => Some(v.to_string()),
             None => None,
         };
 
+        // Determine the regex and file extension
+        let filetype = FileType::new(&code_file_path);
+
         Config {
             game: String::from(matches.value_of("GAME").unwrap()),
             entry_point: String::from(file),
             tic_path,
-            base_folder: base_folder.to_path_buf(),
+            base_folder,
             output_file: matches
                 .value_of("OUTPUT")
-                .unwrap_or("build.fnl")
+                .unwrap_or(format!("build.{:}", &filetype.extension).as_str())
                 .to_string(),
+            filetype,
             watch: matches.is_present("WATCH"),
         }
     }
