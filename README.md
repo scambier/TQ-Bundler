@@ -2,28 +2,29 @@
 
 > A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
 
-TQ-Builder eases the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
+[Downloads for Windows and Linux](https://github.com/scambier/TQ-Bundler/releases)
+
+TQ-Builder streamlines the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
 
 🎈 _It's a lightweight single-file executable!_ 🎈
 
 Tl;dr:
 ```bash
-$ tq-bundler.exe run game.tic main.lua --watch --tic tic80.exe
-# "game.tic" can be "game.lua/.fnl/.wren/.moon/.nut".
-# Same thing for "main.lua".
+$ mkdir my-game
+$ cd my-game
+$ tq-bundler.exe init lua
+$ tq-bundler.exe run game.lua main.lua --watch --tic tic80.exe
 ```
 
 ## Features
 
-- [ ] (WIP) Initializes your multi-files project
+- [x] Initializes your multi-files project
 - [x] Builds all your files into a single bundle
-- [x] Watch mode to rebuild at every change
-- [x] Launches TIC-80 in watch mode, and injects your code
+- [x] Watches changes to rebuild automatically
+- [x] Launches your game inside TIC-80 in watch mode
 - [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel and JavaScript
 
 ## Installation
-
-### Binary
 
 Since TQ-Bundler is a single-file executable, you can simply [download it](https://github.com/scambier/TQ-Bundler/releases) and place it wherever you'd like.
 For easy access, I recommend to place it somewhere in your `PATH`, next to TIC-80, or at the root of your games projects folder.
@@ -36,7 +37,13 @@ TQ-Bundler has 2 sub-commands:
 
 ### Create a project
 
-[wip]
+```bash
+$ mkdir my-game
+$ cd my-game
+$ tq-bundler.exe init lua # or moon, wren, fennel, squirrel, js
+```
+
+This will create the files `game.lua` (containing the sprites and sounds) and `main.lua` (the code entry point)
 
 ### Include your files
 
@@ -58,7 +65,7 @@ include "macros" // ./macros.wren
 include "tools.utils" // ./tools/utils.wren
 ```
 
-```c
+```js
 // Squirrel, JavaScript syntax
 include("macros") // ./macros.nut
 include("tools.utils") // ./tools/utils.nut
@@ -82,11 +89,11 @@ The bundle file is annotated with comments delimiting the start and end of all i
 
 TQ-Bundler literally replaces `include` statements with the raw contents of said included files. Since statements like `require` or `import` work differently, I wanted to avoid any confusion.
 
-**The bundled file only contains the code, how can I bundle *this* with the assets file?**
-
-For convenience, TQ-Bundler leaves the game file (the one containing your sprites & sounds) alone. This allows you to edit those assets inside TIC-80 and your code inside your external editor, without risking to overwrite one or the other.
+**The bundle file only contains the code, how can I bundle *this* with the assets file?**
 
 Simply `ctrl+s` inside TIC-80, and your whole game (code + assets) will be saved to `game.lua`
+
+For convenience, TQ-Bundler leaves the game file (the one containing your sprites & sounds) alone. This allows you to edit those assets inside TIC-80 and your code inside your external editor, without risking to overwrite one or the other.
 
 ### TypeScript support
 

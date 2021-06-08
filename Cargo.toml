@@ -12,6 +12,7 @@ clap = "2.33.3"
 ctrlc = "3.1.9"
 notify = "4.0.17"
 regex = "1.5.4"
+rust-embed = "5.9.0"
 
 [profile.release]
 # lto = true

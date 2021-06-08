@@ -1,7 +1,12 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::exit,
+};
 
 use clap::ArgMatches;
 use regex::Regex;
+
+use crate::log;
 
 pub struct FileType {
     pub extension: String,
@@ -42,7 +47,8 @@ impl FileType {
                 comment: "//".to_string(),
             },
             _ => {
-                panic!("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js")
+                log(format!("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js"));
+                exit(1);
             }
         }
     }
@@ -65,7 +71,8 @@ impl Config {
         let code_str_path = matches.value_of("CODE").unwrap();
         let code_file_path = Path::new(code_str_path);
         if !code_file_path.is_file() {
-            panic!("{:?} is not a valid file", &code_file_path);
+            log(format!("{:?} is not a valid file", &code_file_path));
+            exit(1);
         }
         let file = code_file_path.file_stem().unwrap().to_str().unwrap();
 

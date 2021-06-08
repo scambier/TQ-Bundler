@@ -1,28 +1,31 @@
 mod config;
+mod initializer;
 mod module;
+mod watcher;
 
 use chrono::Local;
 use clap::{App, Arg, ArgMatches, SubCommand};
 use config::*;
+use initializer::*;
 use module::*;
-use notify::{DebouncedEvent::*, RecommendedWatcher, RecursiveMode, Watcher};
 use std::{
     fs,
     path::PathBuf,
     process::{exit, Child, Command},
-    sync::{mpsc::channel, Mutex},
-    time::Duration,
+    sync::Mutex,
 };
+use watcher::watch;
 
 fn main() {
     let matches = App::new("TIC-80 Bundler")
         .version("1.0.0")
+        // RUN
         .subcommand(
             SubCommand::with_name("run")
             .about("Bundle and launch your game")
             .arg(
                 Arg::with_name("GAME")
-                    .help("The TIC game file in which the bundled code will be injected")
+                    .help("The TIC game file, containing sounds and sprites, but no code")
                     .required(true)
                     .index(1),
             )
@@ -55,11 +58,22 @@ fn main() {
                     .help("Watch for changes and rebuild automatically"),
             )
         )
+        // INIT
         .subcommand(
             SubCommand::with_name("init").about("Initialize a TIC-80 project")
-            .arg(Arg::with_name("LANG").help(r#""fnl", "wren""#))
+            .arg(
+                Arg::with_name("LANG")
+                    .required(true)
+                    .index(1)
+                    .help(r#""lua", "moon", "fennel", "wren", "squirrel", "js""#)
+            )
         )
         .get_matches();
+
+    // Init project
+    if let Some(initargs) = matches.subcommand_matches("init") {
+        initialize(&initargs.value_of("LANG").unwrap());
+    }
 
     // Create a config file from the CLI arguments
     if let Some(runargs) = matches.subcommand_matches("run") {
@@ -69,38 +83,6 @@ fn main() {
 
 fn log(str: String) {
     println!("{:} - {:}", Local::now().format("%M:%m:%S"), str);
-}
-
-fn watch(config: &Config) -> notify::Result<()> {
-    let (sender, receiver) = channel();
-
-    let mut watcher: RecommendedWatcher = Watcher::new(sender, Duration::from_millis(50)).unwrap();
-
-    watcher
-        .watch(&config.base_folder, RecursiveMode::Recursive)
-        .unwrap(); // Panic if the watcher can't watch
-
-    loop {
-        match receiver.recv() {
-            Ok(event) => {
-                match event {
-                    // Trigger rebuild on file write|delete
-                    Create(path) | Write(path) | Remove(path) => {
-                        if path.is_file()
-                            && path.ends_with(&config.filetype.extension)
-                            && !path.ends_with(&config.output_file)
-                        {
-                            compile(&config);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            Err(e) => {
-                println!("Watch error: {:?}", e);
-            }
-        }
-    }
 }
 
 fn compile(config: &Config) -> bool {
