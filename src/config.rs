@@ -11,20 +11,38 @@ pub struct FileType {
 
 impl FileType {
     pub fn new(filename: &Path) -> FileType {
-        match filename.extension().unwrap().to_str().unwrap() {
+        // (\n|[\r\n]+) is a fix for the EOL symbol ($) not working on Windows CRLF
+
+        // Regex for `include "my.module"`
+        let regex = Regex::new(r#"(?m)^include "([a-zA-Z\.]+)"(\n|[\r\n]+)"#).unwrap();
+
+        let ext = filename.extension().unwrap().to_str().unwrap();
+        let extension = ext.to_string();
+        match ext {
+            "lua" | "moon" => FileType {
+                extension,
+                regex,
+                comment: "--".to_string(),
+            },
             "fnl" => FileType {
-                extension: "fnl".to_string(),
-                // (\n|[\r\n]+) is a fix for the EOL symbol ($) not working on Windows CRLF
-                regex: Regex::new(r#"(?m)^\(include ([a-zA-Z\.]+)\)(\n|[\r\n]+)"#).unwrap(),
-                comment: ";;".to_string()
+                extension,
+                // Regex for `(include "my.module")`
+                regex: Regex::new(r#"(?m)^\(include "([a-zA-Z\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                comment: ";;".to_string(),
             },
             "wren" => FileType {
-                extension: "wren".to_string(),
-                regex: Regex::new(r#"(?m)^include "([a-zA-Z\.]+)"(\n|[\r\n]+)"#).unwrap(),
-                comment: "//".to_string()
+                extension,
+                regex,
+                comment: "//".to_string(),
+            },
+            "nut" | "js" => FileType {
+                extension,
+                // Regex for `include("my.module")`
+                regex: Regex::new(r#"(?m)^include\("([a-zA-Z\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                comment: "//".to_string(),
             },
             _ => {
-                panic!("Supported extensions are .fnl, .wren")
+                panic!("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js")
             }
         }
     }

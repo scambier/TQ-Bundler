@@ -124,7 +124,7 @@ fn compile(config: &Config) -> bool {
     // Modules to add once the loop is over
     let mut to_add: Vec<Module> = vec![];
     // List of included file paths
-    let mut requires: Vec<PathBuf> = vec![];
+    let mut includes: Vec<PathBuf> = vec![];
 
     // Index all the modules
     loop {
@@ -149,11 +149,11 @@ fn compile(config: &Config) -> bool {
                         }
                     }
 
-                    // De-duplicate requires
-                    if requires.contains(&path) {
+                    // De-duplicate includes
+                    if includes.contains(&path) {
                         module.contents.replace_range(pos.range(), "");
                     } else {
-                        requires.push(path.clone());
+                        includes.push(path.clone());
                     }
                 }
                 // println!("{:?}", &cap);

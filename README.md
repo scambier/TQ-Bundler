@@ -1,102 +1,93 @@
 # TQ-Bundler
 
-> A _fast_ bundler/watcher/launcher for **TIC-80** games.
+> A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
 
-**Work In Progress**
+TQ-Builder eases the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
 
-- [x] Build a multiple-files project
-- [x] Watch changes and auto rebuild
-- [x] Launch TIC-80 in watch mode
-- [x] Fennel support
-- [ ] Lua support
-- [ ] Moonscript support
-- [x] Wren support
-- [ ] Squirrel support
-- [ ] `init` command
-- [x] ~~JavaScript support~~ [Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
+🎈 _It's a lightweight single-file executable!_ 🎈
+
+Tl;dr:
+```bash
+$ tq-bundler.exe run game.tic main.lua --watch --tic tic80.exe
+# "game.tic" can be "game.lua/.fnl/.wren/.moon/.nut".
+# Same thing for "main.lua".
+```
+
+## Features
+
+- [ ] (WIP) Initializes your multi-files project
+- [x] Builds all your files into a single bundle
+- [x] Watch mode to rebuild at every change
+- [x] Launches TIC-80 in watch mode, and injects your code
+- [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel and JavaScript
 
 ## Installation
 
 ### Binary
 
-Since TQ-Bundler is a single-file executable, you can simply download it and place it wherever you'd like.
-For easy access from the terminal, it is recommended to place it somewhere in your `PATH`, or inside the folder containing your game sources.
+Since TQ-Bundler is a single-file executable, you can simply [download it](https://github.com/scambier/TQ-Bundler/releases) and place it wherever you'd like.
+For easy access, I recommend to place it somewhere in your `PATH`, next to TIC-80, or at the root of your games projects folder.
 
-### Cargo
+## Usage
 
-If you have the rustup toolchain, you can also `cargo install --git https://github.com/scambier/TQ-Bundler`
+TQ-Bundler has 2 sub-commands:
+- `init` to quickly initialize a multi-file project in the language of your choice
+- `run` to bundle the files and start TIC-80 with your game
 
-## How To
+### Create a project
 
-### Create a new project
+[wip]
 
-```sh
-# In your terminal
-$ mkdir mygame
+### Include your files
+
+```lua
+-- Lua, Moonscript syntax
+include "macros" -- will look for ./macros.lua
+include "tools.utils" -- ./tools/utils.lua
 ```
-
-```sh
-# Inside TIC-80:
-new fennel
-save mygame/game.fnl
-```
-
-- Alongside `game.fnl`, create a new file `main.fnl` that will hold your code.
-- Cut the code (comments included) from `game.fnl` and paste it inside `main.fnl`
-
-### Include files
-
-! The regex parser will only resolve `include`s that:  
-a) are on their own line and  
-b) are terminated with a line return
-
-That last point is important if the last line of a file is an `include`
 
 ```lisp
 ;; Fennel syntax
-(include macros) ;; will look for macros.fnl
-(include tools.utils) ;; will look for tools/utils.fnl
+(include "macros") ;; ./macros.fnl
+(include "tools.utils") ;; ./tools/utils.fnl
 ```
 
-```wren
+```c
 // Wren syntax
-include "macros"
-include "tools.utils"
+include "macros" // ./macros.wren
+include "tools.utils" // ./tools/utils.wren
 ```
 
-All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order.
+```c
+// Squirrel, JavaScript syntax
+include("macros") // ./macros.nut
+include("tools.utils") // ./tools/utils.nut
+```
 
-If a file has already been included, subsequent includes will be discarded.
+All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order. `include`s must be on their own line (1 include per line).
 
 ### Bundle and launch your game
 
-Tl;dr:
-```
-$ tq-bundler.exe run game.tic main.fnl --watch
-```
-
-Full version:
-```
+```sh
 $ tq-bundler.exe help run
-
-Bundle and launch your game
-
-USAGE:
-    tq-bundler.exe run [FLAGS] [OPTIONS] <game.tic>
-
-FLAGS:
-    -w, --watch      Watch for changes and rebuild automatically
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -c, --code <main.fnl>       The "main" code file that will be injected inside the game [default: main.fnl]
-    -o, --output <build.fnl>    The entry point of your TIC-80 game [default: build.fnl]
-        --tic <path>            Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your
-                                game loaded.
-
-ARGS:
-    <game.tic>    The TIC game file in which the bundled code will be injected
 ```
 
-**/!\\** The default bundled file is named `build.fnl`. TQ-Builder won't check if a file with this name already exists, and will happily overwrite it with each new compilation **/!\\**
+**/!\\** The default bundled file is named `build.lua` (or `.wren` etc.). TQ-Builder won't check if a file with this name already exists, and will happily overwrite it with each new compilation **/!\\**
+
+The bundle file is annotated with comments delimiting the start and end of all included files.
+
+## Addendum
+
+**Why not use `require` or `import` statements that already exist in several of these languages?**
+
+TQ-Bundler literally replaces `include` statements with the raw contents of said included files. Since statements like `require` or `import` work differently, I wanted to avoid any confusion.
+
+**The bundled file only contains the code, how can I bundle *this* with the assets file?**
+
+For convenience, TQ-Bundler leaves the game file (the one containing your sprites & sounds) alone. This allows you to edit those assets inside TIC-80 and your code inside your external editor, without risking to overwrite one or the other.
+
+Simply `ctrl+s` inside TIC-80, and your whole game (code + assets) will be saved to `game.lua`
+
+### TypeScript support
+
+[Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
