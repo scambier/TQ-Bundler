@@ -18,7 +18,7 @@ use watcher::watch;
 
 fn main() {
     let matches = App::new("TIC-80 Bundler")
-        .version("1.0.1")
+        .version("1.0.2")
         // RUN
         .subcommand(
             SubCommand::with_name("run")
