@@ -18,7 +18,7 @@ use watcher::watch;
 
 fn main() {
     let matches = App::new("TIC-80 Bundler")
-        .version("1.0.0")
+        .version("1.0.1")
         // RUN
         .subcommand(
             SubCommand::with_name("run")
@@ -39,7 +39,7 @@ fn main() {
                 Arg::with_name("OUTPUT")
                     .short("o")
                     .long("output")
-                    .help("The entry point of your TIC-80 game")
+                    .help("The output bundle file")
                     .takes_value(true)
                     .required(false),
             )
@@ -75,7 +75,7 @@ fn main() {
         initialize(&initargs.value_of("LANG").unwrap());
     }
 
-    // Create a config file from the CLI arguments
+    // Bundle, watch, run tic-80
     if let Some(runargs) = matches.subcommand_matches("run") {
         run(&runargs);
     }
@@ -152,6 +152,12 @@ fn compile(config: &Config) -> bool {
     let mut modules_copy = modules.to_vec();
     let main_file = modules_copy.first_mut().unwrap();
 
+    // Prefix with a small warning to not edit code
+    main_file.contents = format!(
+        "{comment}\n{comment} Bundle file\n{comment} Code changes will be overwritten\n{comment}\n\n{code}",
+        comment=config.filetype.comment, code=main_file.contents
+    );
+
     // Loop until all includes in the main file
     // are recursively replaced
     loop {
@@ -219,6 +225,7 @@ fn compile(config: &Config) -> bool {
 }
 
 fn run(matches: &ArgMatches) {
+    // Create a Config instance from the clap matches
     let config = Config::new(&matches);
 
     // Initial compilation, if we don't want to watch the files
