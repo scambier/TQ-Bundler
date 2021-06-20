@@ -19,7 +19,7 @@ impl FileType {
         // (\n|[\r\n]+) is a fix for the EOL symbol ($) not working on Windows CRLF
 
         // Regex for `include "my.module"`
-        let regex = Regex::new(r#"(?m)^include "([a-zA-Z\.]+)"(\n|[\r\n]+)"#).unwrap();
+        let regex = Regex::new(r#"(?m)^include "([a-zA-Z\-_\.]+)"(\n|[\r\n]+)"#).unwrap();
 
         let ext = filename.extension().unwrap().to_str().unwrap();
         let extension = ext.to_string();
@@ -32,7 +32,7 @@ impl FileType {
             "fnl" => FileType {
                 extension,
                 // Regex for `(include "my.module")`
-                regex: Regex::new(r#"(?m)^\(include "([a-zA-Z\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                regex: Regex::new(r#"(?m)^\(include "([a-zA-Z\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
                 comment: ";;".to_string(),
             },
             "wren" => FileType {
@@ -43,7 +43,7 @@ impl FileType {
             "nut" | "js" => FileType {
                 extension,
                 // Regex for `include("my.module")`
-                regex: Regex::new(r#"(?m)^include\("([a-zA-Z\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                regex: Regex::new(r#"(?m)^include\("([a-zA-Z\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
                 comment: "//".to_string(),
             },
             _ => {
