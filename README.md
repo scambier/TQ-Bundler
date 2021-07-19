@@ -2,7 +2,11 @@
 
 > A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
 
+----
+
 [**!! THIS BUNDLER IS NOT YET COMPATIBLE WITH TIC-80 0.90 !!**](https://github.com/scambier/TQ-Bundler/issues/1)
+
+----
 
 [Downloads for Windows and Linux](https://github.com/scambier/TQ-Bundler/releases)
 
