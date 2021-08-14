@@ -9,6 +9,7 @@ use config::*;
 use initializer::*;
 use module::*;
 use std::{
+    env::current_dir,
     fs,
     path::PathBuf,
     process::{exit, Child, Command},
@@ -250,8 +251,20 @@ fn run(matches: &ArgMatches) {
             .unwrap()
             .to_string();
 
+        let cmds = [
+            "--skip".to_owned(),
+            format!("--fs={}", current_dir().unwrap().to_string_lossy()),
+            // format!("{}", config.game),
+            "--cmd".to_owned(),
+            format!("load {} & load {} code & run", config.game, output_path),
+        ];
+        println!(
+            "Starting TIC-80 with the following args:\n{:?}",
+            cmds.join(" ")
+        );
+
         let child = Command::new(tic_path)
-            .args(&[&config.game, "-code-watch", &output_path])
+            .args(&cmds)
             .spawn()
             .expect("Failed to launch TIC-80");
         tic_process_mtx.lock().unwrap().replace(child);
@@ -269,7 +282,8 @@ fn run(matches: &ArgMatches) {
     }
 
     // Start the watcher
-    if config.watch {
+    if config.tic_path.is_some() {
+        println!("Watching...");
         if let Err(e) = watch(&config) {
             println!("error: {:?}", e)
         }

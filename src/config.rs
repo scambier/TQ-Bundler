@@ -8,6 +8,7 @@ use regex::Regex;
 
 use crate::log;
 
+#[derive(Debug)]
 pub struct FileType {
     pub extension: String,
     pub regex: Regex,
@@ -47,13 +48,16 @@ impl FileType {
                 comment: "//".to_string(),
             },
             _ => {
-                log(format!("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js"));
+                log(format!(
+                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js"
+                ));
                 exit(1);
             }
         }
     }
 }
 
+#[derive(Debug)]
 pub struct Config {
     pub filetype: FileType,
     pub base_folder: PathBuf,
