@@ -2,9 +2,15 @@
 
 > A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
 
-[Downloads for Windows and Linux](https://github.com/scambier/TQ-Bundler/releases)
+----
+
 
 TQ-Builder streamlines the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
+
+Downloads for Windows and Linux:
+
+- [TQ-Bundler for TIC-80 v0.80.x](https://github.com/scambier/TQ-Bundler/releases/tag/1.0.3)
+- [TQ-Bundler for TIC-80 v1.0.x](https://github.com/scambier/TQ-Bundler/releases/tag/2.0.0)
 
 🎈&nbsp;_It's a lightweight single-file executable!_&nbsp;🎈
 
@@ -13,7 +19,7 @@ Tl;dr:
 $ mkdir my-game
 $ cd my-game
 $ tq-bundler.exe init lua
-$ tq-bundler.exe run game.lua main.lua --watch --tic tic80.exe
+$ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 ```
 
 ## Features
@@ -21,7 +27,7 @@ $ tq-bundler.exe run game.lua main.lua --watch --tic tic80.exe
 - [x] Initializes your multi-files project
 - [x] Builds all your files into a single bundle
 - [x] Watches changes to rebuild automatically
-- [x] Launches your game inside TIC-80 in watch mode
+- [x] Launches your game inside TIC-80
 - [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel and JavaScript
 
 ## Installation
@@ -49,8 +55,8 @@ This will create the files `game.lua` (containing the sprites and sounds) and `m
 
 ```lua
 -- Lua, Moonscript syntax
-include "macros" -- will look for ./macros.lua
-include "tools.utils" -- ./tools/utils.lua
+include "macros" -- will look for ./macros.lua, or ./macros.moon
+include "tools.utils" -- ./tools/utils.lua, or ./tools/utils.moon
 ```
 
 ```lisp
@@ -67,26 +73,28 @@ include "tools.utils" // ./tools/utils.wren
 
 ```js
 // Squirrel, JavaScript syntax
-include("macros") // ./macros.nut
-include("tools.utils") // ./tools/utils.nut
+include("macros") // ./macros.nut, or ./macros.js
+include("tools.utils") // ./tools/utils.nut, or ./tools/utils.js
 ```
 
 All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order. `include`s must be on their own line (1 include per line).
 
 ### Bundle and launch your game
 
-Simply bundle:
+
 ```sh
+# Bundle the game into `build.lua`:
 $ tq-bundler.exe run game.lua main.lua
 ```
 
-Bundle, watch, launch TIC-80:
 ```sh
-$ tq-bundler.exe run game.lua main.lua --watch --tic path/to/tic80.exe
+# Bundle and launch through TIC-80, then rebuild when files change:
+$ tq-bundler.exe run game.lua main.lua --tic path/to/tic80.exe
 ```
+This way, you can edit code inside your IDE and edit assets inside TIC-80 _at the same time_. Changes are applied after a `ctrl+r`.
 
-View all options:
 ```sh
+# View all options:
 $ tq-bundler.exe help run
 ```
 
