@@ -40,23 +40,17 @@ fn main() {
                 Arg::with_name("OUTPUT")
                     .short("o")
                     .long("output")
-                    .help("The output bundle file")
+                    .help("The output bundle file. Defaults to \"build.[ext]\".")
                     .takes_value(true)
                     .required(false),
             )
             .arg(
                 Arg::with_name("TIC")
                     .value_name("path")
-                    .long("--tic")
+                    .long("tic")
                     .help("Path to the TIC-80 executable. If specified, will launch TIC-80 in watch mode, with your game loaded.")
                     .takes_value(true)
                     .required(false),
-            )
-            .arg(
-                Arg::with_name("WATCH")
-                    .short("w")
-                    .long("watch")
-                    .help("Watch for changes and rebuild automatically"),
             )
         )
         // INIT
