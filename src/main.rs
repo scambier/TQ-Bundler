@@ -253,6 +253,7 @@ fn run(matches: &ArgMatches) {
 
         let cmds = [
             "--skip".to_owned(),
+            "--keepcmd".to_owned(),
             format!("--fs={}", current_dir().unwrap().to_string_lossy()),
             // format!("{}", config.game),
             "--cmd".to_owned(),
