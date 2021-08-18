@@ -77,7 +77,7 @@ fn main() {
 }
 
 fn log(str: String) {
-    println!("{:} - {:}", Local::now().format("%M:%m:%S"), str);
+    println!("{:} - {:}", Local::now().format("%H:%m:%S"), str);
 }
 
 fn compile(config: &Config) -> bool {
