@@ -10,7 +10,7 @@ TQ-Builder streamlines the use of external editors for TIC-80. Split your projec
 Downloads for Windows and Linux:
 
 - [TQ-Bundler for TIC-80 v0.80.x](https://github.com/scambier/TQ-Bundler/releases/tag/1.0.3)
-- [TQ-Bundler for TIC-80 v1.0.x](https://github.com/scambier/TQ-Bundler/releases/tag/2.0.0)
+- [TQ-Bundler for TIC-80 v1.0.x](https://github.com/scambier/TQ-Bundler/releases/tag/2.0.1)
 
 🎈&nbsp;_It's a lightweight single-file executable!_&nbsp;🎈
 
