@@ -1,0 +1,2 @@
+./src/init/* -linguist-detectable
+./src/tests/* -linguist-detectable
