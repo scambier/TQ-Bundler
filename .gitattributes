@@ -1,2 +1,2 @@
 src/init/* linguist-vendored
-src/tests/* linguist-vendored
+tests/* linguist-vendored
