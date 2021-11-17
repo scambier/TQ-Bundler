@@ -1,2 +1,2 @@
-src/init/* linguist-vendored
-tests/* linguist-vendored
+* linguist-vendored
+*.rs linguist-vendored=false
