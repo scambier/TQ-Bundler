@@ -16,9 +16,10 @@ pub fn initialize(lang: &str) {
         "squirrel" | "nut" => "nut",
         "wren" => "wren",
         "javascript" | "js" => "js",
+        "ruby" | "rb" => "rb",
         _ => {
             log(
-                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js""#
+                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js", "rb"#
                     .to_string(),
             );
             exit(1);
@@ -47,10 +48,10 @@ pub fn initialize(lang: &str) {
         match fs::write(full_path, file) {
             Ok(_) => {
                 log(format!("Created {:}", filename));
-            },
+            }
             Err(e) => {
                 log(e.to_string());
-            },
+            }
         }
     }
 }

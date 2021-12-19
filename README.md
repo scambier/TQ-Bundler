@@ -28,7 +28,7 @@ $ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 - [x] Builds all your files into a single bundle
 - [x] Watches changes to rebuild automatically
 - [x] Launches your game inside TIC-80
-- [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel and JavaScript
+- [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel, JavaScript and Ruby
 
 ## Installation
 
@@ -46,7 +46,7 @@ TQ-Bundler has 2 sub-commands:
 ```bash
 $ mkdir my-game
 $ cd my-game
-$ tq-bundler.exe init lua # or moon, wren, fennel, squirrel, js
+$ tq-bundler.exe init lua # or moon, wren, fennel, squirrel, js, ruby
 ```
 
 This will create the files `game.lua` (containing the sprites and sounds) and `main.lua` (the code entry point)
@@ -54,9 +54,15 @@ This will create the files `game.lua` (containing the sprites and sounds) and `m
 ### Include your files
 
 ```lua
--- Lua, Moonscript syntax
-include "macros" -- will look for ./macros.lua, or ./macros.moon
-include "tools.utils" -- ./tools/utils.lua, or ./tools/utils.moon
+-- Lua syntax
+include "macros" -- will look for ./macros.lua
+include "tools.utils" -- ./tools/utils.lua
+```
+
+```lua
+-- Moonscript syntax
+include "macros" -- ./macros.moon
+include "tools.utils" -- ./tools/utils.moon
 ```
 
 ```lisp
@@ -72,9 +78,21 @@ include "tools.utils" // ./tools/utils.wren
 ```
 
 ```js
-// Squirrel, JavaScript syntax
-include("macros") // ./macros.nut, or ./macros.js
-include("tools.utils") // ./tools/utils.nut, or ./tools/utils.js
+// Squirrel syntax
+include("macros") // ./macros.nut
+include("tools.utils") // ./tools/utils.nut
+```
+
+```js
+// JavaScript syntax
+include("macros") // ./macros.js
+include("tools.utils") // ./tools/utils.js
+```
+
+```ruby
+# Ruby syntax
+include "macros" # ./macros.rb
+include "tools.utils" # ./tools/utils.rb
 ```
 
 All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order. `include`s must be on their own line (1 include per line).

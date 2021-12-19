@@ -41,6 +41,11 @@ impl FileType {
                 regex,
                 comment: "//".to_string(),
             },
+            "rb" => FileType {
+                extension,
+                regex,
+                comment: "#".to_string(),
+            },
             "nut" | "js" => FileType {
                 extension,
                 // Regex for `include("my.module")`
@@ -49,7 +54,7 @@ impl FileType {
             },
             _ => {
                 log(format!(
-                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js"
+                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb"
                 ));
                 exit(1);
             }
