@@ -15,7 +15,9 @@ regex = "1.5.4"
 rust-embed = "5.9.0"
 
 [profile.release]
-# lto = true
-# codegen-units = 1
-# opt-level = "z"
+strip = true # strip symbols
+# optimize for size
+opt-level = "z"
+lto = true
+codegen-units = 1
 # panic = 'abort'
