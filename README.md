@@ -4,15 +4,11 @@
 
 ----
 
-
 TQ-Builder streamlines the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
 
-Downloads for Windows and Linux:
+<span>🎈&nbsp;_It's a lightweight single-file executable!_&nbsp;🎈</span>
 
-- [TQ-Bundler for TIC-80 v0.80.x](https://github.com/scambier/TQ-Bundler/releases/tag/1.0.3)
-- [TQ-Bundler for TIC-80 v1.0.x](https://github.com/scambier/TQ-Bundler/releases/tag/2.1.0)
-
-🎈&nbsp;_It's a lightweight single-file executable!_&nbsp;🎈
+**[Downloads for Windows and Linux.](https://github.com/scambier/TQ-Bundler/releases)**
 
 Tl;dr:
 ```bash
