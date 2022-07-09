@@ -1,4 +1,4 @@
 include "module"
 include "sub.nested"
 
--- main
+-- [[ Main contents ]]

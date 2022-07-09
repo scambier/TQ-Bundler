@@ -1,1 +1,1 @@
--- sub.nested
+-- [[ sub.nested contents ]]

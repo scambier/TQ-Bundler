@@ -1,1 +1,1 @@
--- module
+-- [[ Module contents ]]
