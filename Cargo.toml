@@ -2,13 +2,13 @@
 authors = ["Simon Cambier <simon.cambier@protonmail.com>"]
 edition = "2018"
 name = "tq-bundler"
-version = "2.1.0"
+version = "2.1.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = "0.4"
-clap = "2.33.3"
+clap = "3.2"
 ctrlc = "3.1.9"
 notify = "4.0.17"
 regex = "1.5.4"

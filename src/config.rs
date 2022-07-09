@@ -70,6 +70,7 @@ pub struct Config {
     pub entry_point: String,
     pub tic_path: Option<String>,
     pub output_file: String,
+    pub clean: bool,
 }
 
 impl Config {
@@ -106,6 +107,7 @@ impl Config {
                 .unwrap_or(format!("build.{:}", &filetype.extension).as_str())
                 .to_string(),
             filetype,
+            clean: *matches.get_one::<bool>("CLEAN").expect("defaulted by clap"),
         }
     }
 }
