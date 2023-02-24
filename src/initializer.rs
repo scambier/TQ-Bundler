@@ -13,13 +13,14 @@ pub fn initialize(lang: &str) {
         "lua" => "lua",
         "moonscript" | "moon" => "moon",
         "fennel" | "fnl" => "fnl",
+        "janet" => "janet",
         "squirrel" | "nut" => "nut",
         "wren" => "wren",
         "javascript" | "js" => "js",
         "ruby" | "rb" => "rb",
         _ => {
             log(
-                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js", "rb"#
+                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js", "rb", "janet"#
                     .to_string(),
             );
             exit(1);

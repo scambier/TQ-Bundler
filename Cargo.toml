@@ -2,7 +2,7 @@
 authors = ["Simon Cambier <simon.cambier@protonmail.com>"]
 edition = "2018"
 name = "tq-bundler"
-version = "2.1.1"
+version = "2.2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

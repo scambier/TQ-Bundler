@@ -26,7 +26,7 @@ $ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 - [x] Builds all your files into a single bundle
 - [x] Watches changes to rebuild automatically
 - [x] Launches your game inside TIC-80
-- [x] Supports Lua, Moonscript, Fennel, Wren, Squirrel, JavaScript and Ruby
+- [x] Supports Lua, Moonscript, Fennel, Janet, Wren, Squirrel, JavaScript and Ruby
 
 ## Installation
 
@@ -44,7 +44,7 @@ TQ-Bundler has 2 sub-commands:
 ```bash
 $ mkdir my-game
 $ cd my-game
-$ tq-bundler.exe init lua # or moon, wren, fennel, squirrel, js, ruby
+$ tq-bundler.exe init lua # or moon, wren, fennel, janet, squirrel, js, ruby
 ```
 
 This will create the files `game.lua` (containing the sprites and sounds) and `main.lua` (the code entry point)
@@ -67,6 +67,12 @@ include "tools.utils" -- ./tools/utils.moon
 ;; Fennel syntax
 (include "macros") ;; ./macros.fnl
 (include "tools.utils") ;; ./tools/utils.fnl
+```
+
+```janet
+# Janet syntax
+(include "macros") # ./macros.janet
+(include "tools.utils") # ./tools/utils.janet
 ```
 
 ```c

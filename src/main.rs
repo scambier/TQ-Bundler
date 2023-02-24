@@ -67,7 +67,7 @@ fn main() {
                 Arg::new("LANG")
                     .required(true)
                     .index(1)
-                    .help(r#""lua", "moon", "fennel", "wren", "squirrel", "js", "ruby"#)
+                    .help(r#""lua", "moon", "fennel", "wren", "squirrel", "js", "ruby", "janet"#)
             )
         )
         .get_matches();
