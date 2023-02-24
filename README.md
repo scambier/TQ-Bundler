@@ -6,7 +6,7 @@
 
 ----
 
-TQ-Builder streamlines the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
+TQ-Bundler streamlines the use of external editors for TIC-80. Split your project into several files, then bundle them and start your game in a single command.
 
 <span>🎈&nbsp;_It's a lightweight single-file executable!_&nbsp;🎈</span>
 
