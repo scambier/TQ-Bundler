@@ -36,7 +36,7 @@ impl FileType {
             "fnl" => FileType {
                 extension,
                 regex: Regex::new(list_regex).unwrap(),
-                comment: "#".to_string(),
+                comment: ";;".to_string(),
             },
             "janet" => FileType {
                 extension,
