@@ -103,6 +103,7 @@ All included files paths are resolved relative to the file including them. All i
 
 ### Bundle and launch your game
 
+> ⚠️ Be careful to respect the arguments order, or your game won't launch. It's always `tq-bundler.exe run GAME MAIN`.
 
 ```sh
 # Bundle the game into `build.lua`:
