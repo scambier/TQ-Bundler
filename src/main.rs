@@ -91,20 +91,19 @@ fn compile(config: &Config) -> bool {
     let re_include = &config.filetype.regex;
 
     // Check the entry point
-    let main_file = Module::new(
+    let main_module = match Module::new(
         &config.base_folder,
         &config.entry_point,
         &config.filetype.extension,
-    );
-    assert!(
-        main_file.is_ok(),
-        "Could not find file {}",
-        &config.entry_point
-    );
-    let main_file = main_file.unwrap();
+    ) {
+        Ok(module) => module,
+        Err(_) => {
+            panic!("Could not find file {}", &config.entry_point)
+        }
+    };
 
     // List of files to include, starting with the entry file
-    let mut modules: Vec<Module> = vec![main_file];
+    let mut modules: Vec<Module> = vec![main_module];
     // Modules to add once the loop is over
     let mut to_add: Vec<Module> = vec![];
     // List of included file paths
@@ -115,6 +114,7 @@ fn compile(config: &Config) -> bool {
         modules.append(&mut to_add);
 
         for module in modules.to_vec().iter_mut() {
+            // Find the include statements in the current module body
             for (cap, pos) in re_include
                 .captures_iter(&module.contents.clone())
                 .zip(re_include.find_iter(&module.contents.clone()))
@@ -152,18 +152,18 @@ fn compile(config: &Config) -> bool {
     // Make a copy of the modules vec
     // to get a mutable copy of the entry file
     let mut modules_copy = modules.to_vec();
-    let main_file = modules_copy.first_mut().unwrap();
+    let main_module = modules_copy.first_mut().unwrap();
 
     // Prefix with a small warning to not edit code
-    main_file.contents = format!(
+    main_module.contents = format!(
         "{comment}\n{comment} Bundle file\n{comment} Code changes will be overwritten\n{comment}\n\n{code}",
-        comment=config.filetype.comment, code=main_file.contents
+        comment=config.filetype.comment, code=main_module.contents
     );
 
     // Loop until all includes in the main file
     // are recursively replaced
     loop {
-        let cloned_contents = main_file.contents.clone();
+        let cloned_contents = main_module.contents.clone();
         match (
             re_include.captures(&cloned_contents),
             re_include.find(&cloned_contents),
@@ -171,11 +171,14 @@ fn compile(config: &Config) -> bool {
             (Some(cap), Some(pos)) => {
                 let module_name = cap.get(1).unwrap().as_str().to_string();
                 let path = Module::get_module_path(
-                    &main_file.path,
+                    &main_module.path,
                     &module_name,
                     &config.filetype.extension,
                 );
-                let module = modules.iter().find(|m| m.path == path).unwrap();
+                let module = modules.iter().find(|m| m.path == path).expect(&format!(
+                    "Could not find module {:?} in the list of modules",
+                    &path
+                ));
 
                 // Inject code into the main file
                 let module_contents;
@@ -192,7 +195,7 @@ fn compile(config: &Config) -> bool {
                     );
                 }
                 // Inject the code
-                main_file
+                main_module
                     .contents
                     .replace_range(pos.range(), &module_contents);
             }
@@ -207,7 +210,7 @@ fn compile(config: &Config) -> bool {
     // Log the (succesful or not) result
     let success = fs::write(
         config.base_folder.join(&config.output_file),
-        &main_file.contents,
+        &main_module.contents,
     );
     match success {
         Ok(_) => {
@@ -258,12 +261,12 @@ fn run(matches: &ArgMatches) {
             .to_string();
 
         let cmds = [
-            "--skip".to_owned(),
-            "--keepcmd".to_owned(),
-            format!("--fs={}", current_dir().unwrap().to_string_lossy()),
+            "--skip",
+            "--keepcmd",
+            &format!("--fs={}", current_dir().unwrap().to_string_lossy()),
             // format!("{}", config.game),
-            "--cmd".to_owned(),
-            format!("load {} & load {} code & run", config.game, output_path),
+            "--cmd",
+            &format!("load {} & load {} code & run", config.game, output_path),
         ];
         println!(
             "Starting TIC-80 with the following args:\n{:?}",

@@ -24,7 +24,7 @@ impl Module {
     }
 
     /// Transforms a module name to a full path,
-    /// relative to the calling module's path
+    /// relative to the main entry point
     pub fn get_module_path(base: &PathBuf, name: &String, ext: &String) -> PathBuf {
         // Make sure that the base path is a folder
         let base = if base.is_file() {
@@ -32,8 +32,17 @@ impl Module {
         } else {
             base
         };
-        let mut relative_path = name.replace(".", "/");
-        relative_path.push_str(format!(".{:}", ext).as_str());
+        // Convert the module name into a path
+        let mut relative_path = PathBuf::new();
+        let mut split = name.split(".").collect::<Vec<_>>();
+        // Append the extension to the last part of the path (the filename)
+        let filename_with_ext = format!("{}.{}", split.last().unwrap(), ext);
+        split.pop();
+        split.push(&filename_with_ext);
+
+        for part in split {
+            relative_path.push(part);
+        }
         base.join(relative_path)
     }
 
