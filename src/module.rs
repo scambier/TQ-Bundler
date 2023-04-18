@@ -1,6 +1,9 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-use crate::{config::Config};
+use crate::config::Config;
 
 #[derive(Clone, Debug)]
 pub struct Module {
@@ -23,7 +26,7 @@ impl Module {
         };
 
         // Rewrite includes to be relative to the root folder
-        let dotted_folder = path_to_dotted(&folder.to_path_buf());
+        let dotted_folder = path_to_dotted(folder);
         if !dotted_folder.is_empty() {
             let reg_include = &config.filetype.regex;
             for capture in reg_include.captures_iter(&contents.clone()) {
@@ -34,31 +37,25 @@ impl Module {
             }
         }
 
-        let module = Module {
+        Module {
             file_path: file_path.clone(),
             contents,
             injected: false,
-        };
-        module
+        }
     }
 
-    pub fn has_module(modules: &Vec<Module>, file_path: &PathBuf) -> bool {
-        modules
-            .iter()
-            .find(|m| {
-                &m.file_path == file_path
-            })
-            .is_some()
+    pub fn has_module(modules: &[Module], file_path: &PathBuf) -> bool {
+        modules.iter().any(|m| &m.file_path == file_path)
     }
 }
 
-fn path_to_dotted(path: &PathBuf) -> String {
+fn path_to_dotted(path: &Path) -> String {
     let mut parts = path.iter().map(|p| p.to_string_lossy()).collect::<Vec<_>>();
     if parts.is_empty() {
         return "".to_string();
     }
     parts.remove(0);
-    
+
     parts.join(".")
 }
 

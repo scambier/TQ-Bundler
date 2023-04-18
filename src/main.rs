@@ -10,9 +10,10 @@ use initializer::*;
 use module::*;
 use std::{
     env::current_dir,
+    fs,
     path::PathBuf,
     process::{exit, Child, Command},
-    sync::Mutex, fs,
+    sync::Mutex,
 };
 use watcher::watch;
 
@@ -87,7 +88,8 @@ fn log(str: String) {
 }
 
 fn compile(config: &Config) -> bool {
-    let re_include = &config.filetype.regex;
+    println!("");
+    let start_time = chrono::Local::now();
 
     // Load entry point module
     let mut path = PathBuf::from(&config.base_folder);
@@ -99,32 +101,21 @@ fn compile(config: &Config) -> bool {
     let mut modules: Vec<Module> = vec![main_module];
     // Modules to add once the loop is over
     let mut to_add: Vec<Module> = vec![];
-    // List of included file paths
-    let mut includes: Vec<PathBuf> = vec![];
 
     // Index all the modules
+    let re_include = &config.filetype.regex;
     loop {
         modules.append(&mut to_add);
 
         for module in modules.to_vec().iter_mut() {
             // Find the include statements in the current module body
-            for (cap, pos) in re_include
-                .captures_iter(&module.contents.clone())
-                .zip(re_include.find_iter(&module.contents.clone()))
-            {
+            for cap in re_include.captures_iter(&module.contents.clone()) {
                 let name = cap.get(1).unwrap().as_str().to_string();
                 let path = dotted_to_path(&name, config);
 
                 if !Module::has_module(&modules, &path) {
                     // Module does not already exist, load it
                     to_add.push(Module::new(&path, config));
-
-                    // De-duplicate includes
-                    if includes.contains(&path) {
-                        module.contents.replace_range(pos.range(), "");
-                    } else {
-                        includes.push(path.clone());
-                    }
                 }
             }
         }
@@ -206,12 +197,14 @@ fn compile(config: &Config) -> bool {
         config.base_folder.join(&config.output_file),
         &main_module.contents,
     );
+    let elapsed = chrono::Local::now().signed_duration_since(start_time);
     match success {
         Ok(_) => {
             log(format!(
-                "Compiled {:} files into {:}",
+                "Compiled {:} files inside {:}, in {:}ms",
                 modules.len(),
                 &config.output_file,
+                elapsed.num_milliseconds()
             ));
         }
         Err(e) => {
