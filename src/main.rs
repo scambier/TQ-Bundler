@@ -10,10 +10,9 @@ use initializer::*;
 use module::*;
 use std::{
     env::current_dir,
-    fs,
     path::PathBuf,
     process::{exit, Child, Command},
-    sync::Mutex,
+    sync::Mutex, fs,
 };
 use watcher::watch;
 
@@ -74,12 +73,12 @@ fn main() {
 
     // Init project
     if let Some(initargs) = matches.subcommand_matches("init") {
-        initialize(&initargs.value_of("LANG").unwrap());
+        initialize(initargs.value_of("LANG").unwrap());
     }
 
     // Bundle, watch, run tic-80
     if let Some(runargs) = matches.subcommand_matches("run") {
-        run(&runargs);
+        run(runargs);
     }
 }
 
@@ -94,7 +93,7 @@ fn compile(config: &Config) -> bool {
     let mut path = PathBuf::from(&config.base_folder);
     path.push(&config.entry_point);
     path.set_extension(&config.filetype.extension);
-    let main_module = Module::new(&path, &config);
+    let main_module = Module::new(&path, config);
 
     // List of files to include, starting with the entry file
     let mut modules: Vec<Module> = vec![main_module];
@@ -114,11 +113,11 @@ fn compile(config: &Config) -> bool {
                 .zip(re_include.find_iter(&module.contents.clone()))
             {
                 let name = cap.get(1).unwrap().as_str().to_string();
-                let path = dotted_to_path(&name, &config);
-                    
+                let path = dotted_to_path(&name, config);
+
                 if !Module::has_module(&modules, &path) {
                     // Module does not already exist, load it
-                    to_add.push(Module::new(&path, &config));
+                    to_add.push(Module::new(&path, config));
 
                     // De-duplicate includes
                     if includes.contains(&path) {
@@ -127,113 +126,105 @@ fn compile(config: &Config) -> bool {
                         includes.push(path.clone());
                     }
                 }
-                // println!("{:?}", &cap);
             }
         }
         // Stop the indexing once we no longer have any module to add,
-        if to_add.len() == 0 {
+        if to_add.is_empty() {
             break;
         }
     }
 
-    println!("---");
     println!("Modules:");
     for module in modules.iter() {
         println!("{:?}", module.file_path);
     }
     println!("---");
 
-    // // Make a copy of the modules vec
-    // // to get a mutable copy of the entry file
-    // let mut modules_copy = modules.to_vec();
-    // let main_module = modules_copy.first_mut().unwrap();
+    // Make a copy of the modules vec
+    // to get a mutable copy of the entry file
+    let mut modules_copy = modules.to_vec();
+    let main_module = modules_copy.first_mut().unwrap();
 
-    // // Prefix with a small warning to not edit code
-    // main_module.contents = format!(
-    //     "{comment}\n{comment} Bundle file\n{comment} Code changes will be overwritten\n{comment}\n\n{code}",
-    //     comment=config.filetype.comment, code=main_module.contents
-    // );
+    // Prefix with a small warning to not edit code
+    main_module.contents = format!(
+        "{comment}\n{comment} Bundle file\n{comment} Code changes will be overwritten\n{comment}\n\n{code}",
+        comment=config.filetype.comment, code=main_module.contents
+    );
 
-    // // Loop until all includes in the main file
-    // // are recursively replaced
-    // loop {
-    //     let cloned_contents = main_module.contents.clone();
-    //     match (
-    //         re_include.captures(&cloned_contents),
-    //         re_include.find(&cloned_contents),
-    //     ) {
-    //         (Some(cap), Some(pos)) => {
-    //             let module_name = cap.get(1).unwrap().as_str().to_string();
-    //             let path = Module::get_module_path(
-    //                 &main_module.file_path,
-    //                 &module_name,
-    //                 &config.filetype.extension,
-    //             );
-    //             let module = modules
-    //                 .iter()
-    //                 .find(|m| m.file_path == path)
-    //                 .expect(&format!(
-    //                     "Could not find module {:?} in the list of modules",
-    //                     &path
-    //                 ));
+    // Loop until all includes in the main file
+    // are recursively replaced
+    loop {
+        let cloned_contents = main_module.contents.clone();
+        match (
+            re_include.captures(&cloned_contents),
+            re_include.find(&cloned_contents),
+        ) {
+            (Some(cap), Some(pos)) => {
+                let module_name = cap.get(1).unwrap().as_str().to_string();
+                let path = dotted_to_path(&module_name, config);
+                let mut module = modules
+                    .iter_mut()
+                    .find(|m| m.file_path == path)
+                    .unwrap_or_else(|| {
+                        panic!("Could not find module {:?} in the list of modules", &path)
+                    });
 
-    //             // Inject code into the main file
-    //             let module_contents;
-    //             if config.clean {
-    //                 module_contents = format!("{:}\n\n", &module.contents);
-    //             } else {
-    //                 module_contents = format!(
-    //                     "{:} [TQ-Bundler: {:}]\n\n{:}\n\n{:} [/TQ-Bundler: {:}]\n\n",
-    //                     &config.filetype.comment,
-    //                     &module_name,
-    //                     &module.contents,
-    //                     &config.filetype.comment,
-    //                     &module_name
-    //                 );
-    //             }
-    //             // Inject the code
-    //             main_module
-    //                 .contents
-    //                 .replace_range(pos.range(), &module_contents);
-    //         }
-    //         _ => {
-    //             // If we haven't captured any regex,
-    //             // that means that all includes are resolved
-    //             break;
-    //         }
-    //     }
-    // }
+                // Inject code into the main file
+                if !module.injected {
+                    let module_contents = if config.clean {
+                        format!("{:}\n\n", &module.contents)
+                    } else {
+                        format!(
+                            "{:} [TQ-Bundler: {:}]\n\n{:}\n\n{:} [/TQ-Bundler: {:}]\n\n",
+                            &config.filetype.comment,
+                            &module_name,
+                            &module.contents,
+                            &config.filetype.comment,
+                            &module_name
+                        )
+                    };
+                    // Inject the code
+                    main_module
+                        .contents
+                        .replace_range(pos.range(), &module_contents);
+                    module.injected = true;
+                } else {
+                    // Module code has already been injected, simply remove the include statement
+                    main_module.contents.replace_range(pos.range(), "");
+                }
+            }
+            _ => {
+                // If we haven't captured any regex,
+                // that means that all includes are resolved
+                break;
+            }
+        }
+    }
 
-    // // Log the (succesful or not) result
-    // let success = fs::write(
-    //     config.base_folder.join(&config.output_file),
-    //     &main_module.contents,
-    // );
-    // match success {
-    //     Ok(_) => {
-    //         let names = modules
-    //             .iter()
-    //             .map(|m| m.file_path.file_name().unwrap().to_str().unwrap())
-    //             .collect::<Vec<_>>()
-    //             .join(", ");
-    //         log(format!(
-    //             "Compiled {:} files into {:}: {:}",
-    //             modules.len(),
-    //             &config.output_file,
-    //             names
-    //         ));
-    //     }
-    //     Err(e) => {
-    //         println!("Could not write output file:");
-    //         println!("{:?}", e);
-    //     }
-    // };
+    // Log the (succesful or not) result
+    let success = fs::write(
+        config.base_folder.join(&config.output_file),
+        &main_module.contents,
+    );
+    match success {
+        Ok(_) => {
+            log(format!(
+                "Compiled {:} files into {:}",
+                modules.len(),
+                &config.output_file,
+            ));
+        }
+        Err(e) => {
+            println!("Could not write output file:");
+            println!("{:?}", e);
+        }
+    };
     true
 }
 
 fn run(matches: &ArgMatches) {
     // Create a Config instance from the clap matches
-    let config = Config::new(&matches);
+    let config = Config::new(matches);
 
     // Initial compilation, if we don't want to watch the files
     let compiled = compile(&config);
@@ -271,7 +262,7 @@ fn run(matches: &ArgMatches) {
         );
 
         let child = Command::new(tic_path)
-            .args(&cmds)
+            .args(cmds)
             .spawn()
             .expect("Failed to launch TIC-80");
         tic_process_mtx.lock().unwrap().replace(child);
