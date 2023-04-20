@@ -137,6 +137,16 @@ Simply `ctrl+s` inside TIC-80, and your whole game (code + assets) will be saved
 
 For convenience, TQ-Bundler leaves the game file (the one containing your sprites & sounds) alone. This allows you to edit those assets inside TIC-80 and your code inside your external editor, without risking to overwrite one or the other.
 
+**TIC-80 doesn't correctly reload my code**
+
+If you're building TIC-80 yourself, make sure to use the correct settings
+
+```sh
+$ cd <path-to-tic>/build
+$ cmake -G "Visual Studio 16 2019" -DBUILD_PRO=On -DCMAKE_BUILD_TYPE=MinSizeRel ..
+$ cmake --build . --config MinSizeRel --parallel
+```
+
 ### TypeScript support
 
 [Take a look at TSC-80, a TypeScript compiler for TIC-80](https://github.com/scambier/tic80-typescript)
