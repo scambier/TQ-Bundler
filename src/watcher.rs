@@ -21,7 +21,7 @@ pub fn watch(config: &Config) -> notify::Result<()> {
                             && path.to_string_lossy().ends_with(&config.filetype.extension)
                             && !path.ends_with(&config.output_file)
                         {
-                            compile(&config);
+                            compile(config);
                         }
                     }
                     _ => {}

@@ -60,9 +60,7 @@ impl FileType {
                 comment: "//".to_string(),
             },
             _ => {
-                log(format!(
-                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet"
-                ));
+                log("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet".to_string());
                 exit(1);
             }
         }
@@ -96,13 +94,10 @@ impl Config {
         let base_folder = code_file_path.parent().unwrap().to_path_buf();
 
         // Optional path to TIC-80; will launch it if present
-        let tic_path = match matches.value_of("TIC") {
-            Some(v) => Some(v.to_string()),
-            None => None,
-        };
+        let tic_path = matches.value_of("TIC").map(|v| v.to_string());
 
         // Determine the regex and file extension
-        let filetype = FileType::new(&code_file_path);
+        let filetype = FileType::new(code_file_path);
 
         Config {
             game: String::from(matches.value_of("GAME").unwrap()),

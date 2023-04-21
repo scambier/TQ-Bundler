@@ -1,49 +1,61 @@
-use std::{fs, io::Error, path::PathBuf};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
-use crate::log;
+use crate::config::Config;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Module {
-    pub path: PathBuf,
+    pub file_path: PathBuf,
     pub contents: String,
+    pub injected: bool,
 }
 
 impl Module {
-    pub fn new(base: &PathBuf, name: &String, ext: &String) -> Result<Module, Error> {
-        let full_path = Module::get_module_path(&base, &name, ext);
-        Module::from_path(full_path)
-    }
+    pub fn new(file_path: &PathBuf, config: &Config) -> io::Result<Self> {
+        let folder = file_path.parent().unwrap();
+        let mut contents = fs::read_to_string(file_path)?;
 
-    pub fn from_path(path: PathBuf) -> Result<Module, Error> {
-        log(format!("Reading {:?}", path));
-        let contents = fs::read_to_string(&path);
-        match contents {
-            Ok(contents) => Ok(Module { contents, path }),
-            Err(e) => Err(e),
+        // Rewrite includes to be relative to the root folder
+        let dotted_folder = path_to_dotted(folder);
+        if !dotted_folder.is_empty() {
+            let reg_include = &config.filetype.regex;
+            for capture in reg_include.captures_iter(&contents.clone()) {
+                let cap = capture.get(1).unwrap();
+                let range = cap.range();
+                let to_replace = &format!("{dotted_folder}.{:}", cap.as_str());
+                contents.replace_range(range, to_replace);
+            }
         }
+
+        Ok(Module {
+            file_path: file_path.clone(),
+            contents,
+            injected: false,
+        })
     }
 
-    /// Transforms a module name to a full path,
-    /// relative to the calling module's path
-    pub fn get_module_path(base: &PathBuf, name: &String, ext: &String) -> PathBuf {
-        // Make sure that the base path is a folder
-        let base = if base.is_file() {
-            base.parent().unwrap()
-        } else {
-            base
-        };
-        let mut relative_path = name.replace(".", "/");
-        relative_path.push_str(format!(".{:}", ext).as_str());
-        base.join(relative_path)
+    pub fn has_module(modules: &[Module], file_path: &PathBuf) -> bool {
+        modules.iter().any(|m| &m.file_path == file_path)
     }
+}
 
-    pub fn has_module(modules: &Vec<Module>, path: &PathBuf) -> bool {
-        modules
-            .iter()
-            .find(|m| {
-                // println!("has module ? {:?} vs {:?}", m.path, path);
-                &m.path == path
-            })
-            .is_some()
+fn path_to_dotted(path: &Path) -> String {
+    let mut parts = path.iter().map(|p| p.to_string_lossy()).collect::<Vec<_>>();
+    if parts.is_empty() {
+        return "".to_string();
     }
+    parts.remove(0);
+
+    parts.join(".")
+}
+
+pub fn dotted_to_path(dots: &str, config: &Config) -> PathBuf {
+    let mut path = config.base_folder.clone();
+    for part in dots.split('.') {
+        path.push(part);
+    }
+    path.set_extension(&config.filetype.extension);
+    path
 }
