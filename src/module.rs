@@ -1,5 +1,5 @@
 use std::{
-    fs,
+    fs, io,
     path::{Path, PathBuf},
 };
 
@@ -13,17 +13,9 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(file_path: &PathBuf, config: &Config) -> Self {
-        assert!(
-            file_path.is_file(),
-            "file_path {:?} is not a file",
-            file_path
-        );
+    pub fn new(file_path: &PathBuf, config: &Config) -> io::Result<Self> {
         let folder = file_path.parent().unwrap();
-        let mut contents = match fs::read_to_string(file_path) {
-            Ok(contents) => contents,
-            Err(e) => panic!("Error reading file: {}", e),
-        };
+        let mut contents = fs::read_to_string(file_path)?;
 
         // Rewrite includes to be relative to the root folder
         let dotted_folder = path_to_dotted(folder);
@@ -37,11 +29,11 @@ impl Module {
             }
         }
 
-        Module {
+        Ok(Module {
             file_path: file_path.clone(),
             contents,
             injected: false,
-        }
+        })
     }
 
     pub fn has_module(modules: &[Module], file_path: &PathBuf) -> bool {

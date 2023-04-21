@@ -86,6 +86,9 @@ fn main() {
 fn log(str: String) {
     println!("{:} - {:}", Local::now().format("%H:%m:%S"), str);
 }
+fn log_err(str: String) {
+    eprintln!("{:} - {:}", Local::now().format("%H:%m:%S"), str);
+}
 
 fn compile(config: &Config) -> bool {
     println!("");
@@ -95,7 +98,13 @@ fn compile(config: &Config) -> bool {
     let mut path = PathBuf::from(&config.base_folder);
     path.push(&config.entry_point);
     path.set_extension(&config.filetype.extension);
-    let main_module = Module::new(&path, config);
+    let main_module = match Module::new(&path, config) {
+        Ok(module) => module,
+        Err(_) => {
+            log_err(format!("Could not find entry point file: {:?}", &path));
+            return false;
+        }
+    };
 
     // List of files to include, starting with the entry file
     let mut modules: Vec<Module> = vec![main_module];
@@ -115,7 +124,14 @@ fn compile(config: &Config) -> bool {
 
                 if !Module::has_module(&modules, &path) {
                     // Module does not already exist, load it
-                    to_add.push(Module::new(&path, config));
+                    let module = match Module::new(&path, config) {
+                        Ok(module) => module,
+                        Err(_) => {
+                            log_err(format!("Could not find file: {:?}", &path));
+                            return false;
+                        }
+                    };
+                    to_add.push(module);
                 }
             }
         }
