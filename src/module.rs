@@ -1,7 +1,4 @@
-use std::{
-    fs, io,
-    path::{Path, PathBuf},
-};
+use std::{fs, io, path::PathBuf};
 
 use crate::config::Config;
 
@@ -13,21 +10,8 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(file_path: &PathBuf, config: &Config) -> io::Result<Self> {
-        let folder = file_path.parent().unwrap();
-        let mut contents = fs::read_to_string(file_path)?;
-
-        // Rewrite includes to be relative to the root folder
-        let dotted_folder = path_to_dotted(folder);
-        if !dotted_folder.is_empty() {
-            let reg_include = &config.filetype.regex;
-            for capture in reg_include.captures_iter(&contents.clone()) {
-                let cap = capture.get(1).unwrap();
-                let range = cap.range();
-                let to_replace = &format!("{dotted_folder}.{:}", cap.as_str());
-                contents.replace_range(range, to_replace);
-            }
-        }
+    pub fn new(file_path: &PathBuf) -> io::Result<Self> {
+        let contents = fs::read_to_string(file_path)?;
 
         Ok(Module {
             file_path: file_path.clone(),
@@ -39,16 +23,6 @@ impl Module {
     pub fn has_module(modules: &[Module], file_path: &PathBuf) -> bool {
         modules.iter().any(|m| &m.file_path == file_path)
     }
-}
-
-fn path_to_dotted(path: &Path) -> String {
-    let mut parts = path.iter().map(|p| p.to_string_lossy()).collect::<Vec<_>>();
-    if parts.is_empty() {
-        return "".to_string();
-    }
-    parts.remove(0);
-
-    parts.join(".")
 }
 
 pub fn dotted_to_path(dots: &str, config: &Config) -> PathBuf {

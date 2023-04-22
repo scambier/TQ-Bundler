@@ -51,6 +51,8 @@ This will create the files `game.lua` (containing the sprites and sounds) and `m
 
 ### Include your files
 
+In all languages, paths are in the format of `"sub.folder.file"`. Paths are resolved absolutely, starting from the root of your project (see example [here](https://github.com/scambier/TQ-Bundler/blob/master/tests/lua/sub/nested.lua)).
+
 ```lua
 -- Lua syntax
 include "macros" -- will look for ./macros.lua
