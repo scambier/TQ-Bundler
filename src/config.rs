@@ -20,10 +20,10 @@ impl FileType {
         // (\n|[\r\n]+) is a fix for the EOL symbol ($) not working on Windows CRLF
 
         // Regex for `include "my.module"`
-        let default_regex = Regex::new(r#"(?m)^include "([a-zA-Z\-_\.]+)"(\n|[\r\n]+)"#).unwrap();
+        let default_regex = Regex::new(r#"(?m)^include "([a-zA-Z0-9\-_\.]+)"(\n|[\r\n]+)"#).unwrap();
 
         // Regex for `(include "my.module")`
-        let list_regex = r#"(?m)^\(include "([a-zA-Z\-_\.]+)"\)(\n|[\r\n]+)"#;
+        let lisp_regex = r#"(?m)^\(include "([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#;
 
         let ext = filename.extension().unwrap().to_str().unwrap();
         let extension = ext.to_string();
@@ -35,12 +35,12 @@ impl FileType {
             },
             "fnl" => FileType {
                 extension,
-                regex: Regex::new(list_regex).unwrap(),
+                regex: Regex::new(lisp_regex).unwrap(),
                 comment: ";;".to_string(),
             },
             "janet" => FileType {
                 extension,
-                regex: Regex::new(list_regex).unwrap(),
+                regex: Regex::new(lisp_regex).unwrap(),
                 comment: "#".to_string(),
             },
             "wren" => FileType {
@@ -56,11 +56,14 @@ impl FileType {
             "nut" | "js" => FileType {
                 extension,
                 // Regex for `include("my.module")`
-                regex: Regex::new(r#"(?m)^include\("([a-zA-Z\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
+                regex: Regex::new(r#"(?m)^include\("([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
                 comment: "//".to_string(),
             },
             _ => {
-                log("Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet".to_string());
+                log(
+                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet"
+                        .to_string(),
+                );
                 exit(1);
             }
         }
