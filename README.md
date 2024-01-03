@@ -1,6 +1,6 @@
 # TQ-Bundler
 
-![Maintenance](https://img.shields.io/maintenance/yes/2023)
+![Maintenance](https://img.shields.io/maintenance/yes/2024)
 
 > A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
 
