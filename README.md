@@ -49,7 +49,9 @@ This will create the files `game.lua` (containing the sprites and sounds) and `m
 
 ### Include your files
 
-In all languages, paths are in the format of `"sub.folder.file"`. Paths are resolved absolutely, starting from the root of your project (see example [here](https://github.com/scambier/TQ-Bundler/blob/master/tests/lua/sub/nested.lua)).
+In all languages, paths are in the format of `"folder.subfolder.file"`. Paths are resolved relatively from the root of your project (see example [here](https://github.com/scambier/TQ-Bundler/blob/master/tests/lua/sub/nested.lua)).
+
+All `include`s are recursively resolved, with respect to their declaration order. `include`s **must** be on their own line (1 per line).
 
 ```lua
 -- Lua syntax
@@ -98,8 +100,6 @@ include("tools.utils") // ./tools/utils.js
 include "macros" # ./macros.rb
 include "tools.utils" # ./tools/utils.rb
 ```
-
-All included files paths are resolved relative to the file including them. All includes are recursively resolved, with respect to their declaration order. `include`s must be on their own line (1 include per line).
 
 ### Bundle and launch your game
 
