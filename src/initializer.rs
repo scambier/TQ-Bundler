@@ -47,7 +47,7 @@ pub fn initialize(lang: &str) {
         }
 
         // Write the file
-        match fs::write(full_path, file) {
+        match fs::write(full_path, file.data) {
             Ok(_) => {
                 log(format!("Created {:}", filename));
             }

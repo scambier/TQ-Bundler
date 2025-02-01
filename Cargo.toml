@@ -1,18 +1,18 @@
 [package]
 authors = ["Simon Cambier <simon.cambier@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "tq-bundler"
-version = "2.2.5"
+version = "2.3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4"
+chrono = "0.4.39"
 clap = "3.2"
-ctrlc = "3.1.9"
-notify = "4.0.17"
-regex = "1.5.4"
-rust-embed = "5.9.0"
+ctrlc = "3.1.10"
+notify = "4.0.18"
+regex = "1.5.6"
+rust-embed = "8.5.0"
 
 [profile.release]
 strip = true # strip symbols
