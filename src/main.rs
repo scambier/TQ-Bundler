@@ -3,7 +3,6 @@ mod initializer;
 mod module;
 mod watcher;
 
-use chrono::Local;
 use clap::{App, Arg, ArgAction, ArgMatches, SubCommand};
 use config::*;
 use initializer::*;
@@ -67,7 +66,7 @@ fn main() {
                 Arg::new("LANG")
                     .required(true)
                     .index(1)
-                    .help(r#""lua", "moon", "fennel", "wren", "squirrel", "js", "ruby", "janet"#)
+                    .help(r#""lua", "moon", "fennel", "wren", "squirrel", "js", "ruby", "janet", "python"#)
             )
         )
         .get_matches();
@@ -169,7 +168,7 @@ fn compile(config: &Config) -> bool {
             (Some(cap), Some(pos)) => {
                 let module_name = cap.get(1).unwrap().as_str().to_string();
                 let path = dotted_to_path(&module_name, config);
-                let mut module = modules
+                let module = modules
                     .iter_mut()
                     .find(|m| m.file_path == path)
                     .unwrap_or_else(|| {
@@ -257,7 +256,7 @@ fn run(matches: &ArgMatches) {
             .unwrap()
             .to_string();
 
-        let cmds = [
+        let tic_opts = [
             "--skip",
             "--keepcmd",
             &format!("--fs={}", current_dir().unwrap().to_string_lossy()),
@@ -267,11 +266,11 @@ fn run(matches: &ArgMatches) {
         ];
         println!(
             "Starting TIC-80 with the following args:\n{:?}",
-            cmds.join(" ")
+            tic_opts.join(" ")
         );
 
         let child = Command::new(tic_path)
-            .args(cmds)
+            .args(tic_opts)
             .spawn()
             .expect("Failed to launch TIC-80");
         tic_process_mtx.lock().unwrap().replace(child);

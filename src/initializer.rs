@@ -18,9 +18,10 @@ pub fn initialize(lang: &str) {
         "wren" => "wren",
         "javascript" | "js" => "js",
         "ruby" | "rb" => "rb",
+        "python" | "py" => "py",
         _ => {
             log(
-                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js", "rb", "janet"#
+                r#"Invalid file type. Use "lua", "moon, "fennel", "squirrel", "wren", "js", "rb", "janet", "py"#
                     .to_string(),
             );
             exit(1);

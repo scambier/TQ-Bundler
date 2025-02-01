@@ -53,7 +53,7 @@ impl FileType {
                 regex: default_regex,
                 comment: "#".to_string(),
             },
-            "nut" | "js" => FileType {
+            "nut" | "js" | "py" => FileType {
                 extension,
                 // Regex for `include("my.module")`
                 regex: Regex::new(r#"(?m)^include\("([a-zA-Z0-9\-_\.]+)"\)(\n|[\r\n]+)"#).unwrap(),
@@ -61,7 +61,7 @@ impl FileType {
             },
             _ => {
                 log(
-                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet"
+                    "Supported extensions are .lua, .moon, .fnl, .wren, .nut, .js, .rb, .janet, .py"
                         .to_string(),
                 );
                 exit(1);
