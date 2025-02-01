@@ -1,4 +1,4 @@
-# script: ruby
+# script: python
 
 
 # <TILES>
