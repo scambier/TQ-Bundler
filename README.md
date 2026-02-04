@@ -31,6 +31,53 @@ $ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 Since TQ-Bundler is a single-file executable, you can simply [download it](https://github.com/scambier/TQ-Bundler/releases) and place it wherever you'd like.
 For easy access, I recommend to place it somewhere in your `PATH`, next to TIC-80, or at the root of your games projects folder.
 
+## Local checks before push
+
+Run these fast local checks before publishing a release:
+
+```powershell
+# Windows
+./scripts/check.ps1
+```
+
+```bash
+# WSL / Linux
+./scripts/check.sh
+```
+
+## Releasing binaries (manual workflow)
+
+This repository includes a manual GitHub Actions workflow at `.github/workflows/release-binaries.yml`.
+
+It builds and publishes:
+- `tq-bundler-windows-x86_64.zip`
+- `tq-bundler-linux-x86_64-musl.tar.gz`
+- `SHA256SUMS.txt`
+
+Release flow:
+1. Run local checks (`scripts/check.ps1` or `scripts/check.sh`).
+2. Open GitHub Actions and run `Release Binaries`.
+3. Set `version` to `vX.Y.Z` or `vX.Y.Z-postfix` (example: `v2.3.0-etm.1`).
+4. Optionally set `set_as_latest`.
+
+Notes:
+- `Cargo.toml` version stays unchanged (useful when maintaining a fork of upstream).
+- Release tags can carry fork-specific postfixes (for example `-etm.1`).
+
+## Download from another repository
+
+You can download assets from the latest release with the GitHub API.
+
+```bash
+REPO="OWNER/REPO"
+ASSET="tq-bundler-linux-x86_64-musl.tar.gz"
+
+ASSET_URL=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  | jq -r --arg name "$ASSET" '.assets[] | select(.name == $name) | .browser_download_url')
+
+curl -fL "$ASSET_URL" -o "$ASSET"
+```
+
 ## Usage
 
 TQ-Bundler has 2 sub-commands:

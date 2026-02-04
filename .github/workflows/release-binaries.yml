@@ -1,0 +1,116 @@
+name: Release Binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag (vX.Y.Z or vX.Y.Z-postfix, e.g. v2.3.0-etm.1)'
+        required: true
+        type: string
+      set_as_latest:
+        description: "Mark this release as latest"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release tag format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "::error title=Invalid version::Use vX.Y.Z or vX.Y.Z-postfix (example: v2.3.0-etm.1)"
+            exit 1
+          fi
+
+  build:
+    needs: validate-inputs
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset_name: tq-bundler-windows-x86_64.zip
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            asset_name: tq-bundler-linux-x86_64-musl.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Linux musl target
+        if: runner.os == 'Linux'
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: Build release binary (Windows)
+        if: runner.os == 'Windows'
+        run: cargo build --release --locked
+
+      - name: Build release binary (Linux musl)
+        if: runner.os == 'Linux'
+        run: cargo build --release --locked --target x86_64-unknown-linux-musl
+
+      - name: Package Windows artifact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "target/release/tq-bundler.exe" `
+            -DestinationPath "tq-bundler-windows-x86_64.zip" `
+            -Force
+
+      - name: Package Linux artifact
+        if: runner.os == 'Linux'
+        run: |
+          tar -czf tq-bundler-linux-x86_64-musl.tar.gz \
+            -C target/x86_64-unknown-linux-musl/release \
+            tq-bundler
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tq-bundler-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create checksum file
+        run: |
+          cd dist
+          sha256sum \
+            tq-bundler-windows-x86_64.zip \
+            tq-bundler-linux-x86_64-musl.tar.gz > SHA256SUMS.txt
+
+      - name: Create or update GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: TQ-Bundler ${{ inputs.version }}
+          make_latest: ${{ inputs.set_as_latest && 'true' || 'false' }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/tq-bundler-windows-x86_64.zip
+            dist/tq-bundler-linux-x86_64-musl.tar.gz
+            dist/SHA256SUMS.txt
