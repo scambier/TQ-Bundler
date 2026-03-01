@@ -174,15 +174,15 @@ This way, you can edit code inside your IDE and edit assets inside TIC-80 _at th
 
 ```sh
 # Bundle, then run a post-build minifier (fork-only):
-$ tq-bundler.exe run game.py main.py --post-output build.min.py --post-build "python scripts/minify_tic80_build.py \"{input}\" \"{output}\""
+$ tq-bundler.exe run game.py main.py --post-output build.min.py --post-build "python scripts/minify_tic80_build.py {input} {output}"
 ```
 
 ```sh
 # Bundle + watch + TIC-80 launch, always applying post-build on rebuilds (fork-only):
-$ tq-bundler.exe run game.py main.py --tic path/to/tic80.exe --post-output build.min.py --post-build "python scripts/minify_tic80_build.py \"{input}\" \"{output}\""
+$ tq-bundler.exe run game.py main.py --tic path/to/tic80.exe --post-output build.min.py --post-build "python scripts/minify_tic80_build.py {input} {output}"
 ```
 
-`--post-build` is a shell command template executed after bundling. The placeholders `{input}` and `{output}` are replaced with absolute file paths. If `--post-output` is set, TIC-80 loads that file as runtime code; otherwise it loads the regular bundle output.
+`--post-build` is a command template executed after bundling. The placeholders `{input}` and `{output}` are replaced with file paths after argument tokenization, so placeholders can be used as standalone arguments without extra quotes. If `--post-output` is set, TIC-80 loads that file as runtime code; otherwise it loads the regular bundle output.
 
 ```sh
 # View all options:
