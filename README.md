@@ -1,6 +1,8 @@
 # TQ-Bundler
 
 > A fast bundler/watcher/launcher for your [**TIC-80**](https://tic80.com/) projects.
+>
+> This README documents the `TQ-Bundler-python` fork. Options such as `--post-build` and `--post-output` are fork-specific and are not part of the original upstream TQ-Bundler.
 
 ----
 
@@ -22,6 +24,7 @@ $ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 
 - [x] Initializes your multi-files project
 - [x] Builds all your files into a single bundle
+- [x] Runs an optional post-build command after each bundle (for minifiers/transforms)
 - [x] Watches changes to rebuild automatically
 - [x] Launches your game inside TIC-80
 - [x] Supports Lua, Moonscript, Fennel, Janet, Wren, Squirrel, JavaScript, Ruby, and Python
@@ -168,6 +171,18 @@ $ tq-bundler.exe run game.lua main.lua
 $ tq-bundler.exe run game.lua main.lua --tic path/to/tic80.exe
 ```
 This way, you can edit code inside your IDE and edit assets inside TIC-80 _at the same time_. Changes are applied after a `ctrl+r`.
+
+```sh
+# Bundle, then run a post-build minifier (fork-only):
+$ tq-bundler.exe run game.py main.py --post-output build.min.py --post-build "python scripts/minify_tic80_build.py \"{input}\" \"{output}\""
+```
+
+```sh
+# Bundle + watch + TIC-80 launch, always applying post-build on rebuilds (fork-only):
+$ tq-bundler.exe run game.py main.py --tic path/to/tic80.exe --post-output build.min.py --post-build "python scripts/minify_tic80_build.py \"{input}\" \"{output}\""
+```
+
+`--post-build` is a shell command template executed after bundling. The placeholders `{input}` and `{output}` are replaced with absolute file paths. If `--post-output` is set, TIC-80 loads that file as runtime code; otherwise it loads the regular bundle output.
 
 ```sh
 # View all options:
