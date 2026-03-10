@@ -22,6 +22,7 @@ $ tq-bundler.exe run game.lua main.lua --tic tic80.exe
 
 - [x] Initializes your multi-files project
 - [x] Builds all your files into a single bundle
+- [x] Runs an optional post-build command after each bundle (for minifiers/transforms)
 - [x] Watches changes to rebuild automatically
 - [x] Launches your game inside TIC-80
 - [x] Supports Lua, Moonscript, Fennel, Janet, Wren, Squirrel, JavaScript, Ruby, and Python
@@ -121,6 +122,18 @@ $ tq-bundler.exe run game.lua main.lua
 $ tq-bundler.exe run game.lua main.lua --tic path/to/tic80.exe
 ```
 This way, you can edit code inside your IDE and edit assets inside TIC-80 _at the same time_. Changes are applied after a `ctrl+r`.
+
+```sh
+# Bundle, then run a post-build step:
+$ tq-bundler.exe run game.py main.py --post-output build.min.py --post-build "python scripts/minify_tic80_build.py {input} {output}"
+```
+
+Works with all supported languages. Python workaround example: [minify_tic80_build.py](https://gist.github.com/etomarat/4821f6221c2940a32c2769f2cd28e8cd)
+
+```sh
+# Bundle, watch for changes, and rerun the post-build step:
+$ tq-bundler.exe run game.py main.py --tic path/to/tic80.exe --post-output build.min.py --post-build "python scripts/minify_tic80_build.py {input} {output}"
+```
 
 ```sh
 # View all options:
