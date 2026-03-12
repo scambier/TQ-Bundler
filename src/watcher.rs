@@ -1,4 +1,4 @@
-use crate::{compile, config::Config};
+use crate::{compile_pipeline, config::Config};
 use notify::{DebouncedEvent::*, RecommendedWatcher, RecursiveMode, Watcher};
 use std::{sync::mpsc::channel, time::Duration};
 
@@ -20,8 +20,9 @@ pub fn watch(config: &Config) -> notify::Result<()> {
                         if path.is_file()
                             && path.to_string_lossy().ends_with(&config.filetype.extension)
                             && !path.ends_with(&config.output_file)
+                            && !path.ends_with(config.runtime_output_file())
                         {
-                            compile(config);
+                            compile_pipeline(config);
                         }
                     }
                     _ => {}

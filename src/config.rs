@@ -85,6 +85,8 @@ pub struct Config {
     pub entry_point: String,
     pub tic_path: Option<String>,
     pub output_file: String,
+    pub post_build: Option<String>,
+    pub post_output_file: Option<String>,
     pub clean: bool,
 }
 
@@ -105,6 +107,8 @@ impl Config {
 
         // Optional path to TIC-80; will launch it if present
         let tic_path = matches.value_of("TIC").map(|v| v.to_string());
+        let post_build = matches.value_of("POST_BUILD").map(|v| v.to_string());
+        let post_output_file = matches.value_of("POST_OUTPUT").map(|v| v.to_string());
 
         // Determine the regex and file extension
         let filetype = FileType::new(code_file_path);
@@ -118,8 +122,16 @@ impl Config {
                 .value_of("OUTPUT")
                 .unwrap_or(format!("build.{:}", &filetype.extension).as_str())
                 .to_string(),
+            post_build,
+            post_output_file,
             filetype,
             clean: *matches.get_one::<bool>("CLEAN").expect("defaulted by clap"),
         }
+    }
+
+    pub fn runtime_output_file(&self) -> &str {
+        self.post_output_file
+            .as_deref()
+            .unwrap_or(self.output_file.as_str())
     }
 }
